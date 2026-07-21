@@ -1,10 +1,10 @@
 site_name: A股智能投资助手 V2
 site_description: 4 套选股策略 + 17 项技术指标 + 基本面财务筛选
 site_author: Stock Picks V2 Maintainer
-site_url: https://stock-picks-v2.github.io/
+site_url: https://StockPicks.github.io/
 
-repo_name: stock-picks-v2
-repo_url: https://github.com/your-username/stock-picks-v2
+repo_name: StockPicks
+repo_url: https://github.com/wadewen1221/StockPicks
 edit_uri: edit/master/docs/
 
 theme:
@@ -109,6 +109,6 @@ nav:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/your-username/stock-picks-v2
+      link: https://github.com/wadewen1221/StockPicks
 
 copyright: Copyright &copy; 2026 Stock Picks V2 Maintainer - MIT License

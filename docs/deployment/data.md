@@ -128,7 +128,7 @@ python -m jobs.news_job --fetch
     推荐用 Windows junction 指向共享数据目录:
 
     ```powershell
-    mklink /J D:\stock-picks-v2\data D:\stock-picks\data
+    mklink /J D:\StockPicks\data D:\stock-picks\data
     ```
 
 !!! info "首次部署"

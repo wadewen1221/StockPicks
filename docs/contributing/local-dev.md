@@ -5,7 +5,7 @@
 ## 仓库结构
 
 ```
-stock-picks-v2/
+StockPicks/
 ├── backend/                  # 后端 (Python)
 │   ├── selector/             # 选股核心模块 (V2.1 拆分后)
 │   │   ├── _types.py         # 共享类型别名
@@ -40,8 +40,8 @@ stock-picks-v2/
 ### 1. 克隆 + 装依赖
 
 ```bash
-git clone https://github.com/your-username/stock-picks-v2.git
-cd stock-picks-v2
+git clone https://github.com/wadewen1221/StockPicks.git
+cd StockPicks
 
 # 后端
 cd backend

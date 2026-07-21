@@ -29,8 +29,8 @@
 === "Docker Compose (推荐)"
 
     ```bash
-    git clone https://github.com/your-username/stock-picks-v2.git
-    cd stock-picks-v2
+    git clone https://github.com/wadewen1221/StockPicks.git
+    cd StockPicks
     docker-compose up -d
     # 浏览器访问 http://localhost:8080
     ```
@@ -68,4 +68,4 @@
 
 ## 📄 License
 
-MIT License — 详见 [LICENSE](https://github.com/your-username/stock-picks-v2/blob/master/LICENSE)
+MIT License — 详见 [LICENSE](https://github.com/wadewen1221/StockPicks/blob/master/LICENSE)

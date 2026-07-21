@@ -38,8 +38,8 @@
 
 ```bash
 # 1. 克隆仓库
-git clone https://github.com/<your-username>/stock-picks-v2.git
-cd stock-picks-v2
+git clone https://github.com/<wadewen1221>/StockPicks.git
+cd StockPicks
 
 # 2. 后端依赖
 cd backend
@@ -129,7 +129,7 @@ gunicorn -w 4 -b 0.0.0.0:5001 main:app
 ## 📂 目录结构
 
 ```
-stock-picks-v2/
+StockPicks/
 ├── backend/                # 后端
 │   ├── main.py             # Tornado 入口
 │   ├── config.py           # 配置(支持环境变量)
@@ -214,11 +214,11 @@ python -m pytest tests/ -v
 项目使用 MkDocs + Material 主题构建文档站，推送 master 后自动部署到 GitHub Pages。
 
 文档内容:
-- 🚀 [快速上手](https://your-username.github.io/stock-picks-v2/getting-started/) — 5 分钟跑通
-- 🎯 [选股策略详解](https://your-username.github.io/stock-picks-v2/strategies/overview/) — 4 套策略逻辑
-- 🐳 [Docker 部署](https://your-username.github.io/stock-picks-v2/deployment/docker/) — 一键启动
-- 📖 [API 参考](https://your-username.github.io/stock-picks-v2/api/backend/) — 后端接口
-- 🤝 [提 PR 流程](https://your-username.github.io/stock-picks-v2/contributing/pr-guide/) — 完整指南
+- 🚀 [快速上手](https://wadewen1221.github.io/StockPicks/getting-started/) — 5 分钟跑通
+- 🎯 [选股策略详解](https://wadewen1221.github.io/StockPicks/strategies/overview/) — 4 套策略逻辑
+- 🐳 [Docker 部署](https://wadewen1221.github.io/StockPicks/deployment/docker/) — 一键启动
+- 📖 [API 参考](https://wadewen1221.github.io/StockPicks/api/backend/) — 后端接口
+- 🤝 [提 PR 流程](https://wadewen1221.github.io/StockPicks/contributing/pr-guide/) — 完整指南
 
 本地预览文档:
 
@@ -293,5 +293,5 @@ docker-compose down               # 停止并清理
 
 如果这个项目对您有帮助，欢迎 ⭐ Star 支持一下！
 
-![Star History Chart](https://api.star-history.com/svg?repos=<your-username>/stock-picks-v2&type=Date)
+![Star History Chart](https://api.star-history.com/svg?repos=<wadewen1221>/StockPicks&type=Date)
 

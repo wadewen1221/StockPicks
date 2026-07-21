@@ -1,4 +1,4 @@
-# Docker Compose - stock-picks-v2 一键启动
+# Docker Compose - StockPicks 一键启动
 #
 # 用法：
 #   docker-compose up -d           # 后台启动全部服务

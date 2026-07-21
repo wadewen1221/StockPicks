@@ -188,7 +188,7 @@ meta_p = doc.add_paragraph()
 meta_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
 meta_p.paragraph_format.space_before = Pt(60)
 for line in [
-    "项目：stock-picks-v2",
+    "项目：StockPicks",
     "适用读者：Vibe Coding 出身、首次接触 GitHub PR 的开发者",
     "阅读时间：约 25 分钟",
     "版本：v1.0（2026-07-21）",
@@ -277,12 +277,12 @@ add_step_box(
     ],
 )
 add_step_box(
-    doc, 4, "把 stock-picks-v2 项目 clone 到本地",
+    doc, 4, "把 StockPicks 项目 clone 到本地",
     [
-        "本项目已经在您本地 D:\\\\stock-picks-v2\\\\,无需重新 clone",
+        "本项目已经在您本地 D:\\\\StockPicks\\\\,无需重新 clone",
         "如果是别人的开源项目,命令是:",
-        "💻 git clone https://github.com/用户名/stock-picks-v2.git",
-        "💻 cd stock-picks-v2",
+        "💻 git clone https://github.com/用户名/StockPicks.git",
+        "💻 cd StockPicks",
     ],
 )
 
@@ -292,16 +292,16 @@ doc.add_page_break()
 add_heading(doc, "3. 第一次:Fork 别人的项目并提 PR", 1)
 add_para(
     doc,
-    "如果你要给别人的开源项目(stock-picks-v2)提代码贡献,流程是 Fork → 改 → 提 PR。",
+    "如果你要给别人的开源项目(StockPicks)提代码贡献,流程是 Fork → 改 → 提 PR。",
     size=11,
 )
 
 add_step_box(
     doc, 1, "在 GitHub 上 Fork 项目",
     [
-        "打开项目主页:https://github.com/原作者/stock-picks-v2",
+        "打开项目主页:https://github.com/原作者/StockPicks",
         "右上角点 [Fork] 按钮(大蓝色按钮)",
-        "几秒后,GitHub 会在你账号下创建一个副本:https://github.com/你的用户名/stock-picks-v2",
+        "几秒后,GitHub 会在你账号下创建一个副本:https://github.com/你的用户名/StockPicks",
     ],
 )
 add_screenshot_placeholder(
@@ -312,8 +312,8 @@ add_screenshot_placeholder(
         "Watch  [Star]  [Fork]   ← 点这个 Fork",
         "",
         "[ Fork 完成后的跳转页面 ]",
-        "中间显示:yourname/stock-picks-v2 was created",
-        "几秒后自动跳转到 https://github.com/你的用户名/stock-picks-v2",
+        "中间显示:yourname/StockPicks was created",
+        "几秒后自动跳转到 https://github.com/你的用户名/StockPicks",
     ],
 )
 
@@ -321,9 +321,9 @@ add_step_box(
     doc, 2, "把 Fork 后的项目 clone 到本地",
     [
         "在 PowerShell 里:",
-        "💻 git clone https://github.com/你的用户名/stock-picks-v2.git",
-        "💻 cd stock-picks-v2",
-        "💻 git remote add upstream https://github.com/原作者/stock-picks-v2.git",
+        "💻 git clone https://github.com/你的用户名/StockPicks.git",
+        "💻 cd StockPicks",
+        "💻 git remote add upstream https://github.com/原作者/StockPicks.git",
         "📌 upstream 是「上游」,用来同步原作者的更新",
     ],
 )
@@ -343,7 +343,7 @@ add_step_box(
 add_step_box(
     doc, 4, "在 GitHub 上提 PR",
     [
-        "回到你的 Fork 页面 https://github.com/你的用户名/stock-picks-v2",
+        "回到你的 Fork 页面 https://github.com/你的用户名/StockPicks",
         "你会看到黄色横幅:\"fix-rsrs-bug had recent pushes · Open PR\"",
         "点 [Compare & pull request] 按钮",
         "",
@@ -361,10 +361,10 @@ add_screenshot_placeholder(
         "Open pull request",
         "",
         "[ 左侧 base repository]",
-        "base: 原作者/stock-picks-v2  <-  base: master",
+        "base: 原作者/StockPicks  <-  base: master",
         "",
         "[ 右侧 head repository]",
-        "head: 你的用户名/stock-picks-v2 <- compare: fix-rsrs-bug",
+        "head: 你的用户名/StockPicks <- compare: fix-rsrs-bug",
         "",
         "[ Able to merge 绿色提示 = 没有冲突,可以合并 ]",
     ],
@@ -401,7 +401,7 @@ doc.add_page_break()
 add_heading(doc, "4. 在自己项目里提 PR(团队协作)", 1)
 add_para(
     doc,
-    "如果你在自己团队的 stock-picks-v2 项目上协作,流程类似,但不需要 Fork — "
+    "如果你在自己团队的 StockPicks 项目上协作,流程类似,但不需要 Fork — "
     "直接在主项目里建分支、改、提 PR 即可。",
     size=11,
 )
@@ -409,8 +409,8 @@ add_para(
 add_step_box(
     doc, 1, "先 clone 团队主项目",
     [
-        "💻 git clone https://github.com/你的团队/stock-picks-v2.git",
-        "💻 cd stock-picks-v2",
+        "💻 git clone https://github.com/你的团队/StockPicks.git",
+        "💻 cd StockPicks",
     ],
 )
 
@@ -454,7 +454,7 @@ add_screenshot_placeholder(
 add_step_box(
     doc, 4, "在 GitHub 上提 PR",
     [
-        "1. 打开 https://github.com/你的团队/stock-picks-v2",
+        "1. 打开 https://github.com/你的团队/StockPicks",
         "2. 你会看到黄色横幅:\"feature/new-indicator had recent pushes\"",
         "3. 点 [Compare & pull request]",
         "4. base 选 master,compare 选 feature/new-indicator",
@@ -580,7 +580,7 @@ add_code_block(
     "方案 B(推荐):用 SSH 协议\n"
     "  1. ssh-keygen -t rsa -b 4096 -C \"你的邮箱\"\n"
     "  2. 把 ~/.ssh/id_rsa.pub 内容贴到 GitHub → Settings → SSH and GPG keys\n"
-    "  3. git remote set-url origin git@github.com:用户名/stock-picks-v2.git",
+    "  3. git remote set-url origin git@github.com:用户名/StockPicks.git",
 )
 
 add_para(doc, "Q2: PR 提了但说\"Can't automatically merge\"", bold=True, size=12, color=(204, 0, 0))
@@ -641,7 +641,7 @@ add_para(doc, "一、新人第一天", bold=True, size=12, color=(0, 51, 102))
 add_code_block(
     doc,
     "git clone <url>                # 克隆项目到本地\n"
-    "cd stock-picks-v2\n"
+    "cd StockPicks\n"
     "git status                     # 看当前状态(改了啥)\n"
     "git log --oneline              # 看最近 10 次提交(一行一个)\n"
     "git branch                     # 看本地所有分支",
@@ -682,7 +682,7 @@ doc.add_page_break()
 add_heading(doc, "文档结束", 1)
 add_para(
     doc,
-    "本手册基于 stock-picks-v2 项目实战编写,适用于 Vibe Coding 出身、"
+    "本手册基于 StockPicks 项目实战编写,适用于 Vibe Coding 出身、"
     "首次接触 GitHub 协作流程的开发者。",
     size=11,
 )

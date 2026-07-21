@@ -1,0 +1,36 @@
+V2.3: CI 加 mypy + MkDocs GitHub Pages 文档站 (12 页)
+
+## 🎯 CI 加 mypy 类型检查
+- .github/workflows/ci.yml 新增 typecheck job
+- 跑 mypy selector/ config.py stock_selector.py --ignore-missing-imports --no-strict-optional
+- 后续 PR 必须通过 mypy 0 错误才合并
+- 5 个 job: test-backend / test-frontend / typecheck / lint / docs
+
+## 📚 GitHub Pages 文档站
+- mkdocs.yml (2.9 KB) - Material 主题 + 中文 + search + mkdocstrings
+- docs/ 目录 (12 个页面 ~30 KB Markdown)
+  - index.md - 首页 (项目定位 + 快速开始)
+  - getting-started.md - 5 分钟跑通
+  - strategies/ - 4 篇选股策略详解
+  - indicators/ - 17 项指标清单 + RSRS 专题
+  - deployment/ - 本地/Docker/数据更新 3 篇
+  - contributing/ - PR 指南/本地开发/测试 3 篇
+  - api/ - 后端 API + 选股模块 2 篇
+- CI 自动部署 (仅 master push 触发)
+- actions/deploy-pages@v4 官方推荐方式
+- 本地 mkdocs serve 预览
+
+## 📖 README 更新
+- 新增 "📚 在线文档站" 章节
+- 列出 5 个核心文档链接 + mkdocs serve 预览命令
+
+## 🔧 工具
+- tools/verify_ci_yaml.py - CI YAML 语法验证脚本
+
+## 验证
+- pytest: 87/87 通过 (5.71 秒)
+- mypy: 0 errors (10 文件)
+- mkdocs build strict mode: 成功 (1.09 秒)
+- 5 个 CI job YAML 解析通过
+
+后续计划: 老板推 GitHub 后可启用 Pages (Settings → Pages → Source: GitHub Actions)

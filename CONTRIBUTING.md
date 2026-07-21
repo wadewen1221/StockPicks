@@ -30,9 +30,9 @@
 ### 2. Clone 到本地
 
 ```bash
-git clone https://github.com/<your-username>/stock-picks-v2.git
-cd stock-picks-v2
-git remote add upstream https://github.com/<original-owner>/stock-picks-v2.git
+git clone https://github.com/<wadewen1221>/StockPicks.git
+cd StockPicks
+git remote add upstream https://github.com/<original-owner>/StockPicks.git
 ```
 
 ### 3. 创建分支

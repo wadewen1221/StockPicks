@@ -4,21 +4,21 @@
 
 ## 📚 完整 DOCX 手册
 
-如果你不熟悉 PR 流程，可以下载我们的 [PR 操作手册 (DOCX, 8 页)](https://github.com/your-username/stock-picks-v2/releases) 手把手教学。
+如果你不熟悉 PR 流程，可以下载我们的 [PR 操作手册 (DOCX, 8 页)](https://github.com/wadewen1221/StockPicks/releases) 手把手教学。
 
 ## 5 分钟提 PR 流程
 
 ### 1. Fork 项目
 
-访问 https://github.com/your-username/stock-picks-v2
-点击右上角 **Fork** → 你的账号下就有了 `your-username/stock-picks-v2`
+访问 https://github.com/wadewen1221/StockPicks
+点击右上角 **Fork** → 你的账号下就有了 `wadewen1221/StockPicks`
 
 ### 2. Clone 到本地
 
 ```bash
-git clone https://github.com/your-username/stock-picks-v2.git
-cd stock-picks-v2
-git remote add upstream https://github.com/your-username/stock-picks-v2.git
+git clone https://github.com/wadewen1221/StockPicks.git
+cd StockPicks
+git remote add upstream https://github.com/wadewen1221/StockPicks.git
 ```
 
 ### 3. 创建功能分支
@@ -167,7 +167,7 @@ git rebase -i HEAD~3
 
 发现 bug 或想提建议:
 
-1. 访问 https://github.com/your-username/stock-picks-v2/issues
+1. 访问 https://github.com/wadewen1221/StockPicks/issues
 2. 点击 **New issue**
 3. 选择模板:
    - 🐛 **Bug Report** — 报告 bug

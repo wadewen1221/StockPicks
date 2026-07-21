@@ -10,8 +10,8 @@
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/your-username/stock-picks-v2.git
-cd stock-picks-v2
+git clone https://github.com/wadewen1221/StockPicks.git
+cd StockPicks
 
 # 2. 一键启动 (后端 + 前端)
 docker-compose up -d
