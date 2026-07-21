@@ -26,6 +26,40 @@
 - 新增 .gitignore（覆盖敏感文件、缓存、构建产物）
 - 新增 .env.example（环境变量模板，替代已误提交的 .env）
 
+### ✨ V2.1 模块化重构（2026-07-21）
+
+#### D1. 拆分选股引擎 - 模块化架构
+- 原 `stock_selector.py` (1706 行) 拆分为 `backend/selector/` 包 (6 个模块):
+  - `cache.py` (55 行) - LRU 缓存
+  - `data_fetcher.py` (244 行) - 历史数据获取
+  - `fiscal.py` (241 行) - 基本面财务数据
+  - `indicators.py` (366 行) - 17 种技术指标
+  - `scorer.py` (363 行) - 5 套打分函数
+  - `strategies.py` (393 行) - 选股主流程
+- `stock_selector.py` 变为 79 行薄壳,仅负责重导出 (向后兼容所有旧 import)
+- `StockSelector` 门面类代理所有指标/打分/选择方法
+- 纯函数设计: `select_*_stocks` 接收 fetcher 参数,便于测试
+- `DataFetcher` / `FiscalDataFetcher` 接受可选 `historical_dir` / `fiscal_dir` 参数
+
+#### D2. pytest 单元测试 - 87 个用例
+- `tests/conftest.py` - 共享 fixtures (合成历史数据)
+- `tests/test_cache.py` - 8 用例
+- `tests/test_config.py` - 12 用例
+- `tests/test_data_fetcher.py` - 12 用例
+- `tests/test_fiscal.py` - 8 用例
+- `tests/test_indicators.py` - 23 用例 (含 RSRS 修复回归保护)
+- `tests/test_scorer.py` - 14 用例
+- `tests/test_split_compat.py` - 10 用例
+
+**运行**: `cd backend && python -m pytest tests/ -v` → **87 passed in ~7s**
+
+#### D3. GitHub Actions CI
+- `.github/workflows/ci.yml`
+- 后端: Ubuntu + Windows × Python 3.11 / 3.12
+- 前端: Ubuntu + Windows × Node 18 / 20 / 22
+- flake8 + pyflakes 静态检查
+- Codecov 覆盖率上传
+
 ---
 
 ## [2.0.0] - 2026-05-29 至 2026-06-08

@@ -134,15 +134,26 @@ stock-picks-v2/
 │   ├── main.py             # Tornado 入口
 │   ├── config.py           # 配置(支持环境变量)
 │   ├── scheduler.py        # 定时任务
+│   ├── selector/           # ✨ 选股引擎(模块化拆分)
+│   │   ├── cache.py        # LRU 缓存
+│   │   ├── data_fetcher.py # 历史数据获取
+│   │   ├── fiscal.py       # 基本面财务数据
+│   │   ├── indicators.py   # 17 种技术指标(MA/MACD/RSRS/KDJ/RSI/CCI)
+│   │   ├── scorer.py       # 5 套打分函数
+│   │   ├── strategies.py   # 选股主流程
+│   │   └── __init__.py     # StockSelector 门面类
+│   ├── stock_selector.py   # 向后兼容入口(转发到 selector/ 包)
 │   ├── handlers/           # 11 个 HTTP handler
 │   ├── jobs/               # 4 个定时任务实现
-│   ├── stock_selector.py   # 选股引擎 (1332 行核心逻辑)
 │   ├── backtest_handler.py # 回测引擎 + A 股佣金模型
-│   └── indicators_handler.py # 17 种技术指标
+│   ├── indicators_handler.py # 17 种技术指标
+│   └── tests/              # ✨ pytest 单元测试(87 用例)
 ├── frontend/               # Vue 3 SPA
 │   ├── src/views/          # 6 个核心页面
 │   ├── vite.config.js
 │   └── package.json
+├── .github/workflows/      # ✨ GitHub Actions CI
+│   └── ci.yml              # 多平台自动测试
 ├── requirements.txt        # Python 依赖
 ├── DEPLOY.md               # 生产部署指南
 ├── .env.example            # 环境变量模板
@@ -177,6 +188,35 @@ stock-picks-v2/
 - 💡 提出新功能：[Issues](../../issues)
 - 🔧 提交 PR：[CONTRIBUTING.md](CONTRIBUTING.md)
 - 📖 完善文档：直接提交 PR
+
+### 运行测试
+
+项目采用 pytest 单元测试，**87 个用例,覆盖核心模块**:
+
+```bash
+cd backend
+python -m pytest tests/ -v
+```
+
+测试涵盖:
+- **技术指标** - MA/MACD/RSRS/KDJ/RSI/CCI (23 用例)
+- **打分函数** - 4 套策略评分逻辑 (14 用例)
+- **LRU 缓存** - 过期/淘汰/统计 (8 用例)
+- **配置加载** - 环境变量/生产校验 (12 用例)
+- **数据获取** - JSON 解析/缓存/校验 (12 用例)
+- **财务评分** - ROE/ST/现金流 (8 用例)
+- **模块拆分兼容** - 验证旧 API 仍可用 (10 用例)
+
+提交 PR 前请确保 `pytest tests/` 全绿。
+
+### CI/CD
+
+推送 PR 后,GitHub Actions 会自动在以下环境运行测试:
+
+- **后端**: Ubuntu + Windows, Python 3.11 / 3.12
+- **前端**: Ubuntu + Windows, Node 18 / 20 / 22
+
+查看 `.github/workflows/ci.yml` 获取详情。
 
 > 📌 **重要**：本项目**不进行任何实盘交易**，所有数据用于学术研究和策略验证。
 

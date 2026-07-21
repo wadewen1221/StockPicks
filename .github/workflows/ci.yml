@@ -1,0 +1,133 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+jobs:
+  # ============ Python 后端测试 ============
+  test-backend:
+    name: Backend (Python ${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.12']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+
+      - name: Run pytest
+        env:
+          # 使用 pytest 默认空环境，避免读取真实数据
+          STOCK_PICKS_DATA: /tmp/stock-picks-test-data
+          STOCK_PICKS_FISCAL: /tmp/stock-picks-test-data/fiscal
+          DEBUG: 'true'
+          COOKIE_SECRET: test-cookie-secret-for-ci-only-1234567890
+        run: |
+          cd backend
+          mkdir -p "$STOCK_PICKS_DATA/historical"
+          mkdir -p "$STOCK_PICKS_FISCAL"
+          python -m pytest tests/ -v --tb=short --color=yes
+
+      - name: Generate coverage report
+        if: matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'
+        env:
+          STOCK_PICKS_DATA: /tmp/stock-picks-test-data
+          STOCK_PICKS_FISCAL: /tmp/stock-picks-test-data/fiscal
+        run: |
+          cd backend
+          python -m pytest tests/ --cov=selector --cov=config --cov-report=term-missing --cov-report=xml
+
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'
+        uses: codecov/codecov-action@v4
+        with:
+          file: backend/coverage.xml
+          flags: backend
+          fail_ci_if_error: false
+
+  # ============ 前端构建验证 ============
+  test-frontend:
+    name: Frontend (Node ${{ matrix.node-version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node-version: ['18', '20', '22']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: frontend
+        run: npm run build
+
+      - name: Lint check (optional)
+        working-directory: frontend
+        run: |
+          if [ -f .eslintrc.js ] || [ -f .eslintrc.json ] || [ -f eslint.config.js ]; then
+            npm run lint || echo "Lint warnings present, not failing build"
+          else
+            echo "No ESLint config found, skipping"
+          fi
+
+  # ============ 代码质量检查 ============
+  lint:
+    name: Lint (Python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install lint tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pyflakes
+
+      - name: Run flake8 (best-effort)
+        continue-on-error: true
+        run: |
+          cd backend
+          flake8 selector/ config.py stock_selector.py --max-line-length=120 --ignore=E501,W503,E402,F401 --exclude=__pycache__,tests
+
+      - name: Run pyflakes
+        continue-on-error: true
+        run: |
+          cd backend
+          pyflakes selector/ config.py stock_selector.py main.py
