@@ -8,11 +8,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  hello:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "hello"
-
   lint:
     name: Lint (Python)
     runs-on: ubuntu-latest
@@ -56,3 +51,19 @@ jobs:
             --no-strict-optional \
             --show-error-codes \
             --pretty
+
+  docs-build:
+    name: Docs Build (MkDocs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      - run: |
+          python -m pip install --upgrade pip
+          pip install mkdocs mkdocs-material mkdocstrings[python] pymdown-extensions
+      - name: Build docs site
+        run: |
+          mkdocs build --strict
