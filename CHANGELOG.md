@@ -7,7 +7,33 @@
 
 ---
 
-## [Unreleased] - 2026-07-21
+## [Unreleased] - 2026-07-22
+
+### ✨ V2.3 质量提升与文档站
+
+#### 🎯 CI 加 mypy 静态检查
+- `.github/workflows/ci.yml` 新增 `typecheck` job
+- 跑 `mypy selector/ config.py stock_selector.py --ignore-missing-imports --no-strict-optional`
+- 后续 PR 必须通过 mypy 0 错误
+
+#### 📚 GitHub Pages 文档站
+- 新增 `mkdocs.yml` — MkDocs Material 主题配置
+- 新增 `docs/` 目录 (12 个页面，~30 KB Markdown)
+- `.github/workflows/ci.yml` 新增 `docs` job
+- 推送 master 后自动构建并部署到 GitHub Pages
+- 文档内容:
+  - 首页 / 快速上手
+  - 4 篇选股策略详解
+  - 17 项指标说明 + RSRS 专题
+  - 本地 / Docker / 数据更新 3 篇部署文档
+  - PR 指南 / 本地开发 / 测试 3 篇贡献文档
+  - 后端 API + 选股模块 2 篇 API 参考
+
+#### 📖 README 更新
+- 新增"📚 在线文档站"章节，链接到 GitHub Pages
+- 新增 `mkdocs serve` 本地预览说明
+
+### ✨ V2.2 Docker + 类型提示 + PR 手册 (2026-07-22)
 
 ### 🛠️ 改进
 - **架构调整**：从老版本 `D:\stock-picks\` 完整迁移到独立 V2 项目

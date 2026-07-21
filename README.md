@@ -209,6 +209,24 @@ python -m pytest tests/ -v
 
 提交 PR 前请确保 `pytest tests/` 全绿。
 
+### 📚 在线文档站
+
+项目使用 MkDocs + Material 主题构建文档站，推送 master 后自动部署到 GitHub Pages。
+
+文档内容:
+- 🚀 [快速上手](https://your-username.github.io/stock-picks-v2/getting-started/) — 5 分钟跑通
+- 🎯 [选股策略详解](https://your-username.github.io/stock-picks-v2/strategies/overview/) — 4 套策略逻辑
+- 🐳 [Docker 部署](https://your-username.github.io/stock-picks-v2/deployment/docker/) — 一键启动
+- 📖 [API 参考](https://your-username.github.io/stock-picks-v2/api/backend/) — 后端接口
+- 🤝 [提 PR 流程](https://your-username.github.io/stock-picks-v2/contributing/pr-guide/) — 完整指南
+
+本地预览文档:
+
+```bash
+pip install mkdocs mkdocs-material mkdocstrings[python] pymdown-extensions
+mkdocs serve   # http://localhost:8000
+```
+
 ### CI/CD
 
 推送 PR 后,GitHub Actions 会自动在以下环境运行测试:
