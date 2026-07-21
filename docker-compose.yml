@@ -1,0 +1,84 @@
+# Docker Compose - stock-picks-v2 一键启动
+#
+# 用法：
+#   docker-compose up -d           # 后台启动全部服务
+#   docker-compose logs -f         # 查看实时日志
+#   docker-compose down            # 停止并清理
+#   docker-compose ps              # 查看运行状态
+#   docker-compose restart backend # 重启单个服务
+#
+# 注意：
+#   1. 首次启动会自动构建镜像（约 3-5 分钟）
+#   2. 数据目录用 volume 持久化，删容器不丢数据
+#   3. Windows 上 Docker Desktop 必须开启 WSL2 后端
+
+version: '3.9'
+
+services:
+  # ============ 后端 API 服务 ============
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stock-picks-backend
+    restart: unless-stopped
+    ports:
+      - "5001:5001"          # 暴露 5001 端口到宿主机
+    environment:
+      # === 基础配置 ===
+      HOST: "0.0.0.0"
+      PORT: "5001"
+      DEBUG: "false"
+      PYTHONUNBUFFERED: "1"
+      # === 数据目录（容器内路径，挂载到 volume）===
+      STOCK_PICKS_DATA: "/app/data/historical"
+      STOCK_PICKS_FISCAL: "/app/data/fiscal"
+      # === 可选：自定义环境变量（取消注释使用）===
+      # STOCK_PICKS_TENCENT_COOKIE: "your_cookie_here"
+      # COOKIE_SECRET: "your_secret_here"
+    volumes:
+      # 数据持久化（删除容器不丢历史数据）
+      - stock_picks_data:/app/data/historical
+      - stock_picks_fiscal:/app/data/fiscal
+      - stock_picks_logs:/app/backend/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - stock-picks-net
+
+  # ============ 前端 Web 服务 ============
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: stock-picks-frontend
+    restart: unless-stopped
+    ports:
+      - "8080:80"            # 暴露 8080 端口（避免与常见 80 冲突）
+    depends_on:
+      backend:
+        condition: service_healthy   # 等后端健康后再启动
+    networks:
+      - stock-picks-net
+
+# ============ 数据卷（持久化）============
+volumes:
+  stock_picks_data:
+    name: stock_picks_data
+    driver: local
+  stock_picks_fiscal:
+    name: stock_picks_fiscal
+    driver: local
+  stock_picks_logs:
+    name: stock_picks_logs
+    driver: local
+
+# ============ 自定义网络（服务间通信）============
+networks:
+  stock-picks-net:
+    name: stock-picks-net
+    driver: bridge

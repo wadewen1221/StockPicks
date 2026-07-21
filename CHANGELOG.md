@@ -62,6 +62,52 @@
 
 ---
 
+## [2.2.0] - 2026-07-21
+
+### ✨ 新增
+
+#### T1. Docker 一键部署
+- 根目录新增 `docker-compose.yml` (2.1 KB)
+- `Dockerfile` (后端 Python 3.12-slim, 1.0 KB)
+- `frontend/Dockerfile` (多阶段构建 Node 20 + nginx, 582 B)
+- `frontend/nginx.conf` (SPA + API 反代, 1.3 KB)
+- `.dockerignore` (减小镜像体积, 664 B)
+- 启劢后: 前端 http://localhost:8080, 后端 http://localhost:5001
+- 数据持久化: stock_picks_data / stock_picks_fiscal / stock_picks_logs volumes
+- 健康检查: /api/health + /healthz + Docker HEALTHCHECK
+
+#### T2. V2.2 批量加类型提示
+- 新增 `selector/_types.py` (2.0 KB) - 共享类型别名
+  - `HistData` / `StockDataList` / `Indicators` / `ScoreResult` / `StockPick` / `MarketThresholds`
+- 为 6 个模块加类型提示: cache / data_fetcher / fiscal / indicators / scorer / strategies
+- 为 `config.py` 加类型提示
+- 为 `selector/__init__.py` (StockSelector 门面类) 加类型提示
+- 重大发现: 重构时手滑调整了 `evaluate_mid_long_term` 参数顺序 (stock_data, hist_data → hist_data, stock_data=None), 被测试拼住
+- 修复: 参数顺序智能判定 (接受旧/新两种调用方式,保持 100% 向后兼容)
+
+#### T3. PR 操作手册
+- 工具脚本: `tools/gen_pr_manual.py` (生成 DOCX, 20 KB)
+- 成品: `E:\技术文件资料\PR操作手册_股票智能选股.docx` (42.8 KB)
+- 内容: 7 章 + 附录,含：
+  - 什么是 PR (A 股类比)
+  - 准备工作 (Git + GitHub)
+  - Fork + 提 PR 全流程
+  - PR 评审怎么进行
+  - GitHub Actions 怎么看
+  - 常见问题排查 (5 个)
+  - Git 命令速查
+
+### 🐛 Bug 修复
+- 修复 `evaluate_mid_long_term` / `evaluate_short_term` 重构后参数顺序错误
+  - 同时支持旧 API `evaluate_mid_long_term(stock_data, hist_data)` 和新 API
+  - 向后兼容 100% 保留 (测试 87/87 通过)
+
+### 🔧 工具
+- `mypy` 静态类型检查集成 (8 个核心文件 0 错误)
+- 修正 `Indicators` 类型为 `Dict[str, Any]` (原为 `Dict[str, float]`, 限制了 macd/bollinger 子字典)
+
+---
+
 ## [2.0.0] - 2026-05-29 至 2026-06-08
 
 ### ✨ 核心功能

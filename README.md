@@ -216,6 +216,28 @@ python -m pytest tests/ -v
 - **后端**: Ubuntu + Windows, Python 3.11 / 3.12
 - **前端**: Ubuntu + Windows, Node 18 / 20 / 22
 
+### Docker 一键部署
+
+本项目提供 `docker-compose.yml`,可以**不装 Python/Node** 就能跑起来。
+
+前置要求: [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Windows / Mac / Linux)
+
+```bash
+# 在项目根目录执行:
+docker-compose up -d              # 后台启动全部服务
+docker-compose ps                 # 查看运行状态
+docker-compose logs -f backend    # 实时查看后端日志
+docker-compose down               # 停止并清理
+```
+
+启动后访问:
+
+- **前端**: [http://localhost:8080](http://localhost:8080)
+- **后端 API**: [http://localhost:5001/api/health](http://localhost:5001/api/health)
+- **健康检查**: [http://localhost:8080/healthz](http://localhost:8080/healthz)
+
+数据默认会持久化到 Docker volume(`stock_picks_data` / `stock_picks_fiscal` / `stock_picks_logs`),删除容器不丢数据。
+
 查看 `.github/workflows/ci.yml` 获取详情。
 
 > 📌 **重要**：本项目**不进行任何实盘交易**，所有数据用于学术研究和策略验证。
