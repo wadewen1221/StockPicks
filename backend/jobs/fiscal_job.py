@@ -242,36 +242,146 @@ def fetch_from_baostock(
 
 
 # ============================================================
-# akshare 兜底
+# akshare 兜底（老板 7 项财务指标全覆盖）
 # ============================================================
+
+# akshare 抽象指标接口 -> 老板 7 项字段映射
+# 来源：ak.stock_financial_abstract(symbol=code) 返回 DataFrame
+#   columns: ['选项', '指标', 'YYYYMMDD', ...] (所有季度作为列)
+AKSHARE_ABSTRACT_MAP = {
+    "营业总收入": ("常用指标", "营业总收入"),
+    "归母净利润": ("常用指标", "归母净利润"),
+    "扣非净利润": ("常用指标", "扣非净利润"),  # 备用，实测 abstract 中未必含
+    "每股净资产": ("每股指标", "每股净资产"),
+    "资产负债率": ("财务风险", "资产负债率"),
+    # 总股本/流通股本 走 balance 接口
+    # 扣非净利润 备选走 stock_profit_sheet_by_report_em 的 DEDUCT_PARENT_NETPROFIT
+}
+
 
 def fetch_from_akshare(
     code: str,
     targets: List[Tuple[int, int]],
 ) -> Dict[str, dict]:
-    """从 akshare 拉指定季度的财务数据（兜底数据源）"""
+    """从 akshare 拉指定季度的财务数据（兜底数据源）
+
+    两个接口：
+      1. stock_financial_abstract - 一次返回所有季度，拿 5 个常用指标
+      2. stock_balance_sheet_by_report_em - 拿 SHARE_CAPITAL (总股本)
+    流通股本：akshare 无直接接口，留空（依赖 baostock 或后续接其他数据源）
+    """
     try:
         import akshare as ak
     except ImportError:
         logger.debug("akshare 未安装，跳过")
         return {}
 
+    target_dates = {_fmt_date(y, q) for y, q in targets}
     records: Dict[str, dict] = {}
-    market_prefix = "sh" if code[0] in "569" else "sz" if code[0] in "02" else "bj"
-    symbol = f"{market_prefix}{code}"
 
-    for y, q in targets:
-        rp = _fmt_date(y, q)
-        try:
-            # akshare 财务数据接口
-            df = ak.stock_zyjs_ths(symbol=symbol)
-            # 注：akshare 接口字段差异较大，这里仅示意结构
-            # 实际部署时按老板的 akshare 字段映射表调整
-            if df is None or df.empty:
+    # ---- 接口 1: stock_financial_abstract ----
+    # akshare 抽象指标中日期列格式: '20251231'
+    target_date_compact = {
+        _fmt_date(y, q).replace("-", "") for y, q in targets
+    }
+
+    try:
+        df_abstract = ak.stock_financial_abstract(symbol=code)
+    except Exception as e:
+        logger.debug(f"akshare abstract {code} 异常: {e}")
+        df_abstract = None
+
+    if df_abstract is not None and not df_abstract.empty:
+        # 为每个目标季度收集数据
+        per_quarter: Dict[str, dict] = {d: {} for d in target_dates}
+
+        for field_name, (expected_opt, indicator) in AKSHARE_ABSTRACT_MAP.items():
+            rows = df_abstract[df_abstract["指标"] == indicator]
+            if rows.empty:
                 continue
-            # 留空：老板后续按需提供字段映射
+            row = rows.iloc[0]
+            for dc in target_date_compact:
+                if dc not in df_abstract.columns:
+                    continue
+                v = row.get(dc)
+                if v is None or (isinstance(v, float) and v != v):  # NaN
+                    continue
+                # 转回标准日期格式
+                rp = f"{dc[:4]}-{dc[4:6]}-{dc[6:8]}"
+                if rp in per_quarter:
+                    try:
+                        per_quarter[rp][field_name] = round(float(v), 4)
+                    except (ValueError, TypeError):
+                        pass
+
+        # ---- 接口 2: stock_balance_sheet_by_report_em 拿总股本 ----
+        try:
+            market_prefix = (
+                "sh" if code[0] in "569"
+                else "sz" if code[0] in "02"
+                else "bj"
+            )
+            df_bs = ak.stock_balance_sheet_by_report_em(
+                symbol=f"{market_prefix}{code}"
+            )
+            if df_bs is not None and not df_bs.empty and "SHARE_CAPITAL" in df_bs.columns:
+                # 按 REPORT_DATE 匹配
+                for _, row in df_bs.iterrows():
+                    rd = row.get("REPORT_DATE")
+                    if rd is None:
+                        continue
+                    # datetime -> 'YYYY-MM-DD'
+                    if hasattr(rd, "strftime"):
+                        rd_str = rd.strftime("%Y-%m-%d")
+                    else:
+                        rd_str = str(rd)[:10]
+                    if rd_str in per_quarter:
+                        sc = row.get("SHARE_CAPITAL")
+                        if sc is not None and not (isinstance(sc, float) and sc != sc):
+                            try:
+                                per_quarter[rd_str]["总股本"] = round(float(sc), 0)
+                            except (ValueError, TypeError):
+                                pass
         except Exception as e:
-            logger.debug(f"akshare {code} {rp} 异常: {e}")
+            logger.debug(f"akshare balance {code} 异常: {e}")
+
+        # ---- 接口 3: stock_profit_sheet_by_report_em 补扣非净利润 ----
+        # abstract 表中未必含扣非净利润，profit_sheet 一定有 DEDUCT_PARENT_NETPROFIT
+        if any("扣非净利润" not in r for r in per_quarter.values()):
+            try:
+                market_prefix = (
+                    "sh" if code[0] in "569"
+                    else "sz" if code[0] in "02"
+                    else "bj"
+                )
+                df_ps = ak.stock_profit_sheet_by_report_em(
+                    symbol=f"{market_prefix}{code}"
+                )
+                if df_ps is not None and not df_ps.empty and "DEDUCT_PARENT_NETPROFIT" in df_ps.columns:
+                    for _, row in df_ps.iterrows():
+                        rd = row.get("REPORT_DATE")
+                        if rd is None:
+                            continue
+                        rd_str = rd.strftime("%Y-%m-%d") if hasattr(rd, "strftime") else str(rd)[:10]
+                        if rd_str in per_quarter and "扣非净利润" not in per_quarter[rd_str]:
+                            v = row.get("DEDUCT_PARENT_NETPROFIT")
+                            if v is not None and not (isinstance(v, float) and v != v):
+                                try:
+                                    per_quarter[rd_str]["扣非净利润"] = round(float(v), 4)
+                                except (ValueError, TypeError):
+                                    pass
+            except Exception as e:
+                logger.debug(f"akshare profit_sheet {code} 异常: {e}")
+
+        # 过滤空记录
+        for rp, rec in per_quarter.items():
+            if rec:
+                rec["report_date"] = rp
+                # year/period 推断
+                parts = rp.split("-")
+                rec["year"] = int(parts[0])
+                rec["period"] = f"{parts[1]}-{parts[2]}"
+                records[rp] = rec
 
     return records
 
@@ -442,26 +552,34 @@ def run_fiscal_update(
 
 
 def _process_one(code: str, targets: List[Tuple[int, int]]) -> int:
-    """单股票处理：baostock → akshare 兜底 → 写入"""
+    """单股票处理：baostock → akshare 兜底 → 写入
+
+    字段合并策略：
+      1. baostock 拉一轮（可能在某些字段上有缺失）
+      2. akshare 拉一轮（覆盖全字段，作为补集/追加）
+      3. 以 bs_records 为底，akshare 只补 baostock 缺失的字段
+    """
     target_dates = {_fmt_date(y, q) for y, q in targets}
 
     # 1. baostock 主源
     bs_records = fetch_from_baostock(code, targets)
-    # 仅保留本次目标季度（防御性过滤：baostock 可能返回额外季度）
+    # 仅保留本次目标季度（防御性过滤）
     bs_records = {rp: r for rp, r in bs_records.items() if rp in target_dates}
 
-    # 2. akshare 兜底（baostock 缺哪些补哪些）
-    existing = _existing_dates(code)
-    missing = target_dates - existing - set(bs_records.keys())
-    if missing:
-        missing_targets = [
-            (y, q) for y, q in targets if _fmt_date(y, q) in missing
-        ]
-        aks_records = fetch_from_akshare(code, missing_targets)
-        # 同样过滤到目标季度
-        for rp, rec in aks_records.items():
-            if rp in target_dates:
-                bs_records[rp] = rec
+    # 2. akshare 全面补全（以“字段集”为补集，不以“季度”为单位）
+    #    - 为所有目标季度调用，akshare 返回全字段
+    #    - 只补 baostock 缺的字段，不覆盖 baostock 已有的字段
+    aks_records = fetch_from_akshare(code, targets)
+    for rp, aks_rec in aks_records.items():
+        if rp not in target_dates:
+            continue
+        existing_rec = bs_records.get(rp, {})
+        # akshare 提供但 baostock 未给的字段
+        for k, v in aks_rec.items():
+            if k not in existing_rec:
+                existing_rec[k] = v
+        bs_records.setdefault(rp, existing_rec)
+        bs_records[rp] = existing_rec
 
     # 3. 写入
     return _save(code, bs_records)
