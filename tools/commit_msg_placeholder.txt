@@ -1,0 +1,30 @@
+V2.3.1: 替换占位符 → 真实 GitHub 路径
+
+仓库已成功创建并推送到 https://github.com/wadewen1221/StockPicks
+现在把项目里的占位符替换为真实路径:
+
+- your-username          → wadewen1221
+- stock-picks-v2         → StockPicks
+- github.com/your-username/stock-picks-v2
+  → github.com/wadewen1221/StockPicks
+
+修改的文件 (17 个):
+- mkdocs.yml              # repo_name / repo_url / edit_uri
+- README.md               # GitHub Pages 文档站链接
+- CONTRIBUTING.md         # PR 模板路径
+- docker-compose.yml      # 容器名
+- backend/start_v2.bat    # 路径提示
+- docs/ (8 个 .md)        # 文档站内部链接
+- frontend/package.json + package-lock.json  # npm 项目名同步
+- tools/ (3 个)          # 替换脚本本身
+
+修复:
+- frontend/package-lock.json 的项目名同步为 StockPicks-frontend
+  (避免 npm install 时警告 name 不匹配)
+
+注意:
+- CLAUDE.md / DEPLOY.md / 生产部署方案.txt 是本地文档,保留原路径
+- package-lock.json 仅修改项目名,依赖版本不动
+
+下一步: 老板在 GitHub Pages 启用 Source=GitHub Actions,docs job 会自动部署到
+https://wadewen1221.github.io/StockPicks/

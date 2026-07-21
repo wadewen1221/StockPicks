@@ -159,15 +159,11 @@ jobs:
           cd backend
           pyflakes selector/ config.py stock_selector.py main.py
 
-  # ============ GitHub Pages 文档站 ============
-  docs:
-    name: Build Docs (MkDocs)
+  # ============ 文档站构建验证 (仅验证,不部署) ============
+  # 真正的部署走 .github/workflows/pages.yml
+  docs-build:
+    name: Docs Build (MkDocs)
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -185,15 +181,3 @@ jobs:
       - name: Build docs site
         run: |
           mkdocs build --strict
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
-
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
-        id: deploy

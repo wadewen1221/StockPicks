@@ -1,0 +1,30 @@
+V2.3.2: 拆分 pages workflow 让 GitHub Pages 自动识别
+
+## 问题
+老板在 Settings → Pages 看不到 "Source: GitHub Actions" 选项
+GitHub 提示 "Use a suggested workflow" - 因为它没找到
+.github/workflows/ 下的标准 pages 配置
+
+## 解决
+新增 .github/workflows/pages.yml - GitHub 官方推荐格式
+- jobs.build: MkDocs build + upload artifact
+- jobs.deploy: actions/deploy-pages@v4
+- permissions: contents:read, pages:write, id-token:write
+- concurrency: pages (防止并发部署冲突)
+- environment: github-pages
+
+GitHub 检测到 pages.yml 后会自动启用 Pages 并展示 URL
+
+## ci.yml 调整
+- docs job 改名为 docs-build (仅验证 build,不部署)
+- 删掉部署相关步骤 (由 pages.yml 负责)
+- 5 jobs 保持: test-backend / test-frontend / typecheck / lint / docs-build
+
+## 验证
+- python tools/verify_ci_yaml.py:
+  - ci.yml: 5 jobs parsed
+  - pages.yml: 2 jobs parsed
+
+## 下一步
+- git push 后 GitHub 自动启用 Pages
+- 文档站 URL: https://wadewen1221.github.io/StockPicks/
