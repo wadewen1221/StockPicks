@@ -38,7 +38,7 @@ jobs:
           STOCK_PICKS_DATA: /tmp/stock-picks-test-data
           STOCK_PICKS_FISCAL: /tmp/stock-picks-test-data/fiscal
           DEBUG: 'true'
-          COOKIE_SECRET: ***
+          COOKIE_SECRET: test-cookie-secret-not-used
         run: |
           cd backend
           mkdir -p "$STOCK_PICKS_DATA/historical"
