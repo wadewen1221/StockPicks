@@ -1,0 +1,100 @@
+# ========== 敏感文件 ==========
+.env
+*.pem
+*.key
+cookies.txt
+backend/cookies.txt
+
+# ========== Python 缓存与虚拟环境 ==========
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ========== Node.js / 前端构建产物 ==========
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/dist/*
+!frontend/dist/.gitkeep
+backend/static/assets/
+backend/static/css/
+backend/static/js/
+backend/static/index.html
+!backend/static/.gitkeep
+.vite/
+.npm
+.yarn/
+
+# ========== 项目特定缓存 ==========
+# Bokeh 图表缓存(可重建)
+backend/handlers/cache/
+# 选股结果缓存(定时任务生成)
+backend/stock_cache.json
+# 测试临时数据
+backend/test_news.json
+backend/test_sectors.json
+backend/test_*.json
+
+# ========== 数据文件(太大不进版本控制) ==========
+data/
+data/*/
+!data/.gitkeep
+!data/README.md
+historical/
+*.csv
+historical_data/
+fiscal/
+indices/
+
+# ========== 日志文件 ==========
+*.log
+*.log.*
+logs/
+backend/logs/
+backend/.pytest_cache/
+runtime/
+*.pid
+
+# ========== 临时文件 ==========
+*.tmp
+*.bak
+*.old
+*.swp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.iml
+
+# ========== 测试与覆盖率 ==========
+.tox/
+.nox/
+coverage.xml
+*.cover
+.cache/
+.pytest_cache/
+
+# ========== 文档生成 ==========
+docs/_build/
+site/
+.mypy_cache/
+.ruff_cache/
+
+# ========== 项目符号链接(Windows) ==========
+# data 是符号链接,不在版本控制里
+# 实际数据从 data/historical/ 读,但 git 不跟踪此目录

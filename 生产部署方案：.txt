@@ -1,0 +1,63 @@
+生产部署方案：
+
+  新增文件
+
+  ┌────────────────────────┬───────────────────────────────────────────┐
+  │          文件          │                   说明                    │
+  ├────────────────────────┼───────────────────────────────────────────┤
+  │ DEPLOY.md              │ 详细部署文档（Docker、Nginx、多方式部署） │
+  ├────────────────────────┼───────────────────────────────────────────┤
+  │ build_prod.bat         │ 一键构建脚本（前端 + 复制静态文件）       │
+  ├────────────────────────┼───────────────────────────────────────────┤
+  │ backend/start_prod.bat │ 生产模式启动脚本                          │
+  └────────────────────────┴───────────────────────────────────────────┘
+
+  快速生产部署
+
+  方式一：傻瓜式部署
+  # 1. 双击 build_prod.bat 完成构建
+
+  # 2. 修改 backend/start_prod.bat 中的：
+  #    COOKIE_SECRET=你的强随机密钥
+  #    ALLOWED_ORIGINS=https://你的域名
+
+  # 3. 双击 start_prod.bat 启动
+
+  方式二：手动部署
+  cd frontend && npm run build
+  xcopy /E /I frontend\dist backend\static\
+  cd backend
+  set COOKIE_SECRET=强随机密钥
+  set DEBUG=False
+  gunicorn -w 4 -b 0.0.0.0:5001 main:app
+
+  关键生产配置：
+  - COOKIE_SECRET - 必须设置为强随机字符串
+  - DEBUG=False - 关闭调试模式
+  - ALLOWED_ORIGINS - 配置你的域名，不用 *
+
+  详细文档见 D:\stock-picks-v2\DEPLOY.md。
+
+ 生产部署取得“强随机密钥”的方法：
+
+  方法1：Python 一行命令
+  python -c "import secrets; print(secrets.token_urlsafe(32))"
+  输出示例：abc123...（64字符）
+
+  方法2：在线生成
+  访问 https://www.random.org/strings/ 或 https://1password.com/zh-cn/password-generator/
+  - 长度：32+ 字符
+  - 类型：随机字母数字符号
+
+  方法3：Linux/Mac
+  # 32字节随机密钥
+  head -c 32 /dev/urandom | base64
+
+  ---
+  生成后，修改 start_prod.bat 中的这行：
+  set COOKIE_SECRET=这里粘贴你的密钥
+
+  生产环境建议：
+  - 长度至少 32 字符
+  - 不要使用简单单词或可预测的字符串
+  - 不同环境使用不同密钥

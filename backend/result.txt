@@ -1,0 +1,14 @@
+mid_long:
+603991 score=43
+688002 score=40
+605020 score=46
+688319 score=43
+short_agg:
+603928 score=12
+603738 score=11
+603986 score=11
+short_cons:
+603991 score=50
+603928 score=40
+603986 score=40
+2026-07-03 18:53:46

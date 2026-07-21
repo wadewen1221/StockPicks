@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能A股投资助手 V2</title>
+    <script src="/static/js/bokeh.min.js" defer></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        header { text-align: center; padding: 40px 0; }
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #00d4ff, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .version {
+            display: inline-block;
+            background: linear-gradient(90deg, #00d4ff, #7c3aed);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+        /* 5卡片布局：3+2排列并居中 */
+        .cards-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 40px;
+            justify-content: center;
+        }
+        .cards-grid .card {
+            flex: 1 1 calc(33.333% - 20px);
+            min-width: 280px;
+            max-width: 380px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 212, 255, 0.15);
+        }
+        .card h2 { color: #fff; margin-bottom: 8px; font-size: 1.2rem; }
+        .card p { color: #b0b0b0; line-height: 1.6; font-size: 0.9rem; }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #00d4ff, #7c3aed);
+            color: white;
+            text-decoration: none;
+            margin-top: 12px;
+            cursor: pointer;
+            border: none;
+            font-weight: 500;
+        }
+        .btn:hover { opacity: 0.9; transform: scale(1.02); }
+        /* 功能视图容器 - 有明显的层次感 */
+        .view-section {
+            margin-top: 30px;
+            padding: 24px;
+            background: rgba(20, 25, 45, 0.8);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .view-section h2 {
+            color: #fff;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .features { margin-top: 60px; text-align: center; }
+        .features h2 { font-size: 1.8rem; color: #fff; margin-bottom: 30px; }
+        .feature-tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+        .feature-tag {
+            background: rgba(0, 212, 255, 0.08);
+            border: 1px solid rgba(0, 212, 255, 0.25);
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: #8ec8e8;
+        }
+        .api-section { margin-top: 40px; background: rgba(15, 20, 35, 0.6); border-radius: 16px; padding: 24px; border: 1px solid rgba(255, 255, 255, 0.05); }
+        .api-section h3 { color: #fff; margin-bottom: 16px; }
+        .api-list { display: grid; gap: 12px; }
+        .api-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(0, 0, 0, 0.25); border-radius: 8px; }
+        .api-method { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+        .api-method.get { background: #10b981; color: white; }
+        .api-method.post { background: #f59e0b; color: white; }
+        .api-path { color: #00d4ff; font-family: monospace; font-size: 0.9rem; }
+        .api-desc { color: #888; font-size: 0.85rem; margin-left: auto; }
+        .loading { text-align: center; padding: 40px; color: #888; }
+        .stock-list { margin-top: 20px; }
+        .stock-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .stock-name { font-weight: bold; color: #fff; }
+        .stock-score { color: #00d4ff; }
+        .stock-change.up { color: #f56c6c; }
+        .stock-change.down { color: #67c23a; }
+        .tabs { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+        .tab-btn {
+            padding: 10px 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #999;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .tab-btn.active { background: rgba(0, 212, 255, 0.15); color: #00d4ff; border-color: rgba(0, 212, 255, 0.4); }
+        .tab-content { background: rgba(0, 0, 0, 0.2); border-radius: 12px; padding: 20px; margin-top: 16px; }
+        .chart-container { margin-top: 16px; }
+        .chart-container img { max-width: 100%; border-radius: 8px; }
+        /* 返回主页按钮 */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            color: #999;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+        .back-btn:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>智能A股投资助手</h1>
+            <p style="color: #888; font-size: 1.1rem; margin-top: 10px;">基于人工智能的股票筛选与量化分析系统</p>
+            <span class="version">V2.0</span>
+        </header>
+
+        <div class="cards-grid">
+            <div class="card">
+                <h2>📈 选股结果</h2>
+                <p>查看当前中长线和超短线选股结果，支持按行业、评分等多维度筛选</p>
+                <button class="btn" onclick="showStocks()">查看选股</button>
+            </div>
+            <div class="card">
+                <h2>📉 图表示例</h2>
+                <p>交互式Bokeh图表展示股票K线和技术指标，支持缩放、平移等操作</p>
+                <button class="btn" onclick="showChart()">查看示例</button>
+            </div>
+            <div class="card">
+                <h2>🎯 策略回测</h2>
+                <p>基于Backtrader引擎，对选股策略进行历史回测，验证策略有效性，包含SQN、SharpeRatio等指标</p>
+                <button class="btn" onclick="showBacktest()">运行回测</button>
+            </div>
+            <div class="card">
+                <h2>🧠 智能股票分析</h2>
+                <p>输入股票代码，获取基于RSRS、KDJ、RSI、CCI等技术指标的综合买卖建议分析</p>
+                <button class="btn" onclick="showAnalysis()">开始分析</button>
+            </div>
+            <div class="card">
+                <h2>📊 技术指标详解</h2>
+                <p>详细了解17种技术指标的原理、计算方式和判定标准，包含KDJ、MACD、BOLL、RSI等</p>
+                <button class="btn" onclick="showIndicatorsDetail()">查看详情</button>
+            </div>
+        </div>
+
+        <!-- 视图区域：选股结果 -->
+        <div class="view-section" id="stockList" style="display: none;">
+            <button class="back-btn" onclick="navigateTo('home')">← 返回主页</button>
+            <h2>📈 选股结果</h2>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('mid_long')">中长线</button>
+                <button class="tab-btn" onclick="switchTab('short_term_aggressive')">超短线激进型</button>
+                <button class="tab-btn" onclick="switchTab('short_term_conservative')">超短线稳健型</button>
+                <button class="tab-btn" onclick="switchTab('rsrs_kdj_cci')">RSRS组合</button>
+            </div>
+            <div class="tab-content" id="stockContent">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+
+        <!-- 视图区域：K线图表 -->
+        <div class="view-section" id="chartContainer" style="display: none;">
+            <button class="back-btn" onclick="navigateTo('home')">← 返回主页</button>
+            <h2>📊 K线与指标图表</h2>
+            <div style="margin-bottom: 16px;">
+                <select id="chartCategory" onchange="onChartCategoryChange()" style="padding:10px 14px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.3); color:#fff; min-width:160px; font-size:0.95rem;">
+                    <option value="mid_long">中长线 V2</option>
+                    <option value="short_aggressive">超短线激进型</option>
+                    <option value="short_conservative">超短线稳健型</option>
+                    <option value="rsrs_kdj_cci">RSRS组合</option>
+                    <option value="custom">自选股票</option>
+                </select>
+                <select id="chartCodeSelect" style="padding:10px 14px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.3); color:#fff; width:200px; font-size:0.95rem;">
+                    <option value="">-- 请先选择分类 --</option>
+                </select>
+                <input type="text" id="chartCodeInput" placeholder="或直接输入股票代码" style="padding:10px 14px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.3); color:#fff; width:150px; font-size:0.95rem;">
+                <button class="btn" onclick="loadChart()" style="margin-left:8px;">加载图表</button>
+            </div>
+            <div id="bokehChart"></div>
+        </div>
+
+        <!-- 视图区域：技术指标详解 -->
+        <div class="view-section" id="indicatorsDetailContainer" style="display: none;">
+            <button class="back-btn" onclick="navigateTo('home')">← 返回主页</button>
+            <h2>📊 技术指标详解</h2>
+            <div id="indicatorsDetailContent"></div>
+        </div>
+
+        <!-- 视图区域：策略回测 -->
+        <div class="view-section" id="backtestContainer" style="display: none;">
+            <button class="back-btn" onclick="navigateTo('home')">← 返回主页</button>
+            <h2>🎯 策略回测</h2>
+            <div style="margin-bottom: 16px;">
+                <p style="color:#888; margin-bottom:12px;">基于Backtrader引擎，对选股策略进行历史回测</p>
+                <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+                    <select id="backtestStrategy" style="padding:10px 14px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.3); color:#fff; min-width:160px; font-size:0.95rem;">
+                        <option value="mid_long">中长线策略</option>
+                        <option value="short_term_aggressive">超短线激进型</option>
+                        <option value="short_term_conservative">超短线稳健型</option>
+                    </select>
+                    <input type="text" id="backtestCode" placeholder="股票代码(可选)" style="padding:10px 14px; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:rgba(0,0,0,0.3); color:#fff; width:150px; font-size:0.95rem;">
+                    <button class="btn" onclick="runBacktest()">开始回测</button>
+                </div>
+            </div>
+            <div id="backtestResult">
+                <div style="text-align:center; padding:40px; color:#888; background:rgba(0,0,0,0.2); border-radius:12px;">
+                    点击"开始回测"运行策略回测
+                </div>
+            </div>
+        </div>
+
+        <!-- 视图区域：智能股票分析 -->
+        <div class="view-section" id="analysisContainer" style="display: none;">
+            <button class="back-btn" onclick="navigateTo('home')">← 返回主页</button>
+            <h2>🧠 智能股票分析</h2>
+            <div style="margin-bottom: 16px;">
+                <input type="text" id="analysisCodeInput" placeholder="股票代码如 600519" style="padding: 10px 14px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff; width: 150px; font-size:0.95rem;">
+                <button class="btn" onclick="loadAnalysis()" style="margin-left:8px;">开始分析</button>
+            </div>
+            <div id="analysisResult"></div>
+        </div>
+
+        <div class="features">
+            <h2>核心功能</h2>
+            <div class="feature-tags">
+                <span class="feature-tag">stockstats指标</span>
+                <span class="feature-tag">finta指标库</span>
+                <span class="feature-tag">Backtrader回测</span>
+                <span class="feature-tag">Bokeh可视化</span>
+                <span class="feature-tag">KDJ分析</span>
+                <span class="feature-tag">MACD分析</span>
+                <span class="feature-tag">BOLL布林带</span>
+                <span class="feature-tag">RSI分析</span>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h3>API接口</h3>
+            <div class="api-list">
+                <div class="api-item">
+                    <span class="api-method get">GET</span>
+                    <span class="api-path">/api/health</span>
+                    <span class="api-desc">健康检查</span>
+                </div>
+                <div class="api-item">
+                    <span class="api-method get">GET</span>
+                    <span class="api-path">/api/stocks</span>
+                    <span class="api-desc">获取选股结果</span>
+                </div>
+                <div class="api-item">
+                    <span class="api-method get">GET</span>
+                    <span class="api-path">/api/indicators/{code}</span>
+                    <span class="api-desc">获取股票指标图表</span>
+                </div>
+                <div class="api-item">
+                    <span class="api-method get">GET</span>
+                    <span class="api-path">/api/indicators/config</span>
+                    <span class="api-desc">获取指标配置</span>
+                </div>
+                <div class="api-item">
+                    <span class="api-method post">POST</span>
+                    <span class="api-path">/api/backtest</span>
+                    <span class="api-desc">运行回测</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let currentTab = 'mid_long';
+        let stockData = null;
+
+        // 17种指标详情
+        const indicatorsInfo = {
+            kdj: {
+                name: 'KDJ指标',
+                desc: '随机指标(KDJ)由K线、D线、J线三条曲线组成，通过分析n日内最高价、最低价与收盘价的关系来研判股价走势。K值快速确认指标，D值慢速主干指标，J值敏感拐点指标。',
+                calc: 'RSV = (收盘价 - N日内最低价) / (N日内最高价 - N日内最低价) × 100；K = 2/3×前K值 + 1/3×RSV；D = 2/3×前D值 + 1/3×K；J = 3×K - 2×D',
+                signal: 'K值超买>80进入超买区可能回调，K值超卖<20进入超卖区可能反弹；金叉(K上穿D)买入，死叉(K下穿D)卖出；J值>100警惕顶部，J值<0警惕底部',
+                period: 'N=9'
+            },
+            macd: {
+                name: 'MACD指标',
+                desc: '平滑异同移动平均线(MACD)，由快线DIF、慢线DEA和柱状图BAR组成。利用短期与长期指数移动平均线的聚合与分离来研判买卖时机。',
+                calc: 'DIF = EMA12 - EMA26；DEA = DIF的EMA9；BAR = 2×(DIF-DEA)',
+                signal: 'DIF上穿DEA金叉买入，DIF下穿DEA死叉卖出；BAR转红买入，转绿卖出；顶背离可能见顶，底背离可能见底',
+                period: '快线EMA12，慢线EMA26，信号线EMA9'
+            },
+            boll: {
+                name: '布林带指标',
+                desc: '布林线(BOLL)由中轨MA20和上下轨组成。股价在带状区间波动，中轨为趋势方向，上轨为压力位，下轨为支撑位。带状宽度可判断波动率变化。',
+                calc: '中轨 = MA20；上轨 = 中轨 + 2×标准差；下轨 = 中轨 - 2×标准差',
+                signal: '股价上穿上轨可能回调，股价下穿下轨可能反弹；布林带收口表示波动率降低，可能出现突破行情',
+                period: 'N=20，K=2'
+            },
+            rsi: {
+                name: 'RSI指标',
+                desc: '相对强弱指数(RSI)，通过分析一定周期内股价涨跌幅度来判断多空力量对比。RSI取值范围0-100，50为多空分界线。',
+                calc: 'RS = n日内上涨幅度平均值 / n日内下跌幅度平均值；RSI = 100 - 100/(1+RS)',
+                signal: 'RSI>80进入超买区可能回调，RSI<20进入超卖区可能反弹；RSI上穿50中轴看多，下穿50中轴看空；顶背离可能见顶，底背离可能见底',
+                period: 'RSI6短期灵敏，RSI12中期稳定'
+            },
+            cci: {
+                name: 'CCI指标',
+                desc: '顺势指标(CCI)，衡量股价偏离统计平均价的程度。属于超买超卖类指标，波动范围理论上无上下限，但一般(-100,+100)区间内波动较多。',
+                calc: 'CCI = (TP - MA) / (0.015 × MD)；TP = (最高价+最低价+收盘价)/3；MD = N日内(TP-MA)的平均绝对偏差',
+                signal: 'CCI>+100可能进入强势区考虑买入，CCI<-100可能进入弱势区考虑卖出；CCI从下上穿-100买入，从上下穿+100卖出',
+                period: 'N=14'
+            },
+            wr: {
+                name: '威廉指标',
+                desc: '威廉指数(WR)，通过分析一段时间内股价最高价与收盘价的关系来判断超买超卖。取值范围0-100，与RSI是互为逆指标。',
+                calc: 'WR = (Hn - C) / (Hn - Ln) × 100；Hn为n日内最高价，Ln为n日内最低价',
+                signal: 'WR>80进入超卖区可能反弹，WR<20进入超买区可能回调；WR下穿50中轴强势确立，WR上穿50中轴弱势确立',
+                period: 'N=14'
+            },
+            atr: {
+                name: 'ATR指标',
+                desc: '均幅指标(ATR)，用于衡量股价波动剧烈程度。通过计算N日内最高价与最低价之差、最高价与前收盘价之差、最低价与前收盘价之差中的最大值来反映市场波动性。',
+                calc: 'TR = max(最高价-最低价, |最高价-前收盘|, |最低价-前收盘|)；ATR = TR的N日简单移动平均',
+                signal: 'ATR上升表示波动加剧，ATR下降表示波动放缓；配合止损和仓位管理使用',
+                period: 'N=14'
+            },
+            trix: {
+                name: 'TRIX指标',
+                desc: '三重指数平滑移动平均线(TRIX)，对价格进行三次指数平滑处理后计算变化率。过滤掉价格波动的噪音，适合长线趋势判断。',
+                calc: 'TRIX = (EMA_EMA_EMA - 前一日EMA_EMA_EMA) / 前一日EMA_EMA_EMA × 100',
+                signal: 'TRIX上穿零轴买入，下穿零轴卖出；与股价顶背离可能见顶，与股价底背离可能见底',
+                period: 'N=12'
+            },
+            dma: {
+                name: 'DMA指标',
+                desc: '平行线差指标(DMA)，通过计算短期均线与长期均线之差来判断买卖时机。原理类似MACD但计算更简单。',
+                calc: 'DMA = 短期MA - 长期MA；AMA = DMA的M日简单移动平均',
+                signal: 'DMA上穿AMA金叉买入，DMA下穿AMA死叉卖出；DMA与股价顶背离可能见顶，DMA与股价底背离可能见底',
+                period: '短期MA=10，长期MA=50，AMA=10'
+            },
+            dmi: {
+                name: 'DMI指标',
+                desc: '动向指数(DMI)，包括+DI、-DI和ADX三条线。+DI和-DI反映多空力量对比，ADX反映趋势强度。DMI能有效判断盘整行情中的趋势方向。',
+                calc: '+DI = 上升动向 / TR × 100；-DI = 下降动向 / TR × 100；ADX = (+DI--DI)的N日指数平滑平均',
+                signal: '+DI上穿-DI买入，-DI上穿+DI卖出；ADX>30趋势明显，ADX<20趋势不明；ADX上升表示趋势加强',
+                period: 'N=14'
+            },
+            adxr: {
+                name: 'ADXR指标',
+                desc: '平均趋向指数(ADXR)，是ADX的平滑平均，用于判断趋势强度。与DMI配合使用，ADXR与ADX金叉死叉可作为买卖确认信号。',
+                calc: 'ADXR = (ADX + N日前ADX) / 2',
+                signal: 'ADXR上穿ADX买入信号确认，ADXR下穿ADX卖出信号确认；ADXR与ADX同时上升确认趋势行情',
+                period: 'N=14，ADXR通常取14日平均'
+            },
+            vr: {
+                name: 'VR指标',
+                desc: '成交量变异率(VR)，通过分析一段周期内股价上涨日的成交量与下跌日的成交量之比来研判股价走势。反映市场资金的活跃程度。',
+                calc: 'VR = (上涨日成交量 × 1 + 平盘日成交量 × 0.5) / (下跌日成交量 × 1 + 平盘日成交量 × 0.5) × 100',
+                signal: 'VR<40可能见底，VR>250可能见顶；VR上升配合股价上涨确认上升趋势',
+                period: 'N=26'
+            },
+            ppo: {
+                name: 'PPO指标',
+                desc: '价格动量振荡器(PPO)，与MACD类似但以百分比形式表现。计算两条不同周期EMA的差值与较长周期EMA的比值，更易于跨市场比较。',
+                calc: 'PPO = (EMA12 - EMA26) / EMA26 × 100；signal = PPO的EMA9',
+                signal: 'PPO上穿signal金叉买入，PPO下穿signal死叉卖出；PPO转正可能进入强势，转负可能进入弱势',
+                period: '快线EMA12，慢线EMA26，信号线EMA9'
+            },
+            cr: {
+                name: 'CR指标',
+                desc: '能量潮指标(CR)，以昨日中间价为基准，计算当日最高价、最低价与昨日中间价的价差比。反映市场多空力量对比和价格波动能量。',
+                calc: 'CR = Σ(H-M) / Σ(M-L) × 100；H为最高价，M为昨日中间价，L为最低价',
+                signal: 'CR>300可能进入超买区谨慎追高，CR<40可能进入超卖区谨慎杀跌；CR配合均线判断支撑压力',
+                period: 'N=26'
+            },
+            mfi: {
+                name: 'MFI指标',
+                desc: '资金流量指标(MFI)，将成交量与价格相结合来衡量资金流入流出的强度。类似于RSI但加入了成交量因素，更能反映市场资金活动。',
+                calc: 'MFI = 100 - 100/(1+MF)；MF = 典型价格 × 成交量；MF>0为正资金流，MF<0为负资金流',
+                signal: 'MFI>80进入超买区可能回调，MFI<20进入超卖区可能反弹；MFI与股价顶背离可能见顶，MFI与股价底背离可能见底',
+                period: 'N=14'
+            },
+            tema: {
+                name: 'TEMA指标',
+                desc: '三重指数移动平均(TEMA)，通过三次指数平滑处理来减少滞后性。比单一EMA更平滑，比SMA更灵敏，适合中短期趋势追踪。',
+                calc: 'TEMA = 3×EMA1 - 3×EMA2 + EMA3；EMA1为价格EMA，EMA2为EMA1的EMA，EMA3为EMA2的EMA',
+                signal: 'TEMA上穿股价买入，TEMA下穿股价卖出；TEMA上升趋势确立，TEMA下降趋势确立',
+                period: 'N=20'
+            },
+            kama: {
+                name: 'KAMA指标',
+                desc: '考夫曼自适应移动平均(KAMA)，根据市场波动率自动调整平滑系数。波动大时平滑系数增大减少噪音，波动小时平滑系数减小更灵敏。',
+                calc: 'KAMA = 前一日KAMA + SC × (价格 - 前一日KAMA)；SC = 2/(N+1)；N根据效率比ER自适应调整',
+                signal: 'KAMA上行表示趋势向上，KAMA下行表示趋势向下；价格上穿KAMA买入，下穿KAMA卖出',
+                period: 'N=10'
+            }
+        };
+
+        // 当前显示的视图
+        let currentView = 'home';
+
+        // 导航到指定视图
+        function navigateTo(view) {
+            currentView = view;
+            hideAll();
+            if (view === 'stocks') {
+                document.getElementById('stockList').style.display = 'block';
+                loadStocks();
+            } else if (view === 'chart') {
+                document.getElementById('chartContainer').style.display = 'block';
+                // 确保股票数据加载后再初始化下拉框
+                if (!stockData) {
+                    loadStocks().then(() => onChartCategoryChange());
+                } else {
+                    onChartCategoryChange();
+                }
+            } else if (view === 'analysis') {
+                document.getElementById('analysisContainer').style.display = 'block';
+            } else if (view === 'backtest') {
+                document.getElementById('backtestContainer').style.display = 'block';
+            } else if (view === 'indicators') {
+                document.getElementById('indicatorsDetailContainer').style.display = 'block';
+                renderIndicatorsDetail();
+            }
+            // 使用History API记录状态
+            if (view === 'home') {
+                history.pushState({view: 'home'}, '', '/');
+            } else {
+                history.pushState({view: view}, '', '?view=' + view);
+            }
+        }
+
+        // 主页按钮函数
+        function showStocks() { navigateTo('stocks'); }
+        function showChart() { navigateTo('chart'); }
+        function showAnalysis() { navigateTo('analysis'); }
+        function showBacktest() { navigateTo('backtest'); }
+        function showIndicatorsDetail() { navigateTo('indicators'); }
+
+        // 隐藏所有视图
+        function hideAll() {
+            document.getElementById('stockList').style.display = 'none';
+            document.getElementById('chartContainer').style.display = 'none';
+            document.getElementById('backtestContainer').style.display = 'none';
+            document.getElementById('analysisContainer').style.display = 'none';
+            document.getElementById('indicatorsDetailContainer').style.display = 'none';
+        }
+
+        // 处理浏览器后退/前进按钮
+        window.onpopstate = function(event) {
+            if (event.state && event.state.view) {
+                if (event.state.view === 'home') {
+                    hideAll();
+                    currentView = 'home';
+                } else {
+                    // 重新显示对应视图但不重复pushState
+                    currentView = event.state.view;
+                    hideAll();
+                    if (event.state.view === 'stocks') {
+                        document.getElementById('stockList').style.display = 'block';
+                        loadStocks();
+                    } else if (event.state.view === 'chart') {
+                        document.getElementById('chartContainer').style.display = 'block';
+                        loadChart();
+                    } else if (event.state.view === 'analysis') {
+                        document.getElementById('analysisContainer').style.display = 'block';
+                    } else if (event.state.view === 'backtest') {
+                        document.getElementById('backtestContainer').style.display = 'block';
+                    } else if (event.state.view === 'indicators') {
+                        document.getElementById('indicatorsDetailContainer').style.display = 'block';
+                        renderIndicatorsDetail();
+                    }
+                }
+            } else {
+                // 默认显示主页
+                hideAll();
+                currentView = 'home';
+            }
+        };
+
+        // 页面加载时检查URL参数
+        function initFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const view = params.get('view');
+            if (view) {
+                navigateTo(view);
+            } else {
+                hideAll();
+                currentView = 'home';
+            }
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', initFromUrl);
+
+        async function loadStocks() {
+            try {
+                const res = await fetch(API_BASE + '/stocks');
+                const data = await res.json();
+                if (data.code === 0) {
+                    stockData = data.data;
+                    renderStocks();
+                }
+            } catch (e) {
+                document.getElementById('stockContent').innerHTML = '<div class="loading">加载失败</div>';
+            }
+        }
+
+        function renderStocks() {
+            if (!stockData) return;
+            const stocks = stockData[currentTab] || [];
+            if (stocks.length === 0) {
+                document.getElementById('stockContent').innerHTML = '<div class="loading">暂无数据</div>';
+                return;
+            }
+            let html = '<div style="display: grid; gap: 12px;">';
+            stocks.forEach(s => {
+                const change = s.change_pct || 0;
+                const changeClass = change >= 0 ? 'up' : 'down';
+                const bt = s.backtest || {};
+                const profitPct = bt.profit_pct ? (bt.profit_pct * 100).toFixed(2) : '-';
+                const sqn = bt.sqn ? bt.sqn.toFixed(2) : '-';
+                const price = s.price ? s.price.toFixed(2) : '-';
+                html += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: rgba(255,255,255,0.04); border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                                <span style="font-size: 1.1rem; font-weight: bold; color: #fff;">${s.name || s.code}</span>
+                                <span style="color: #666; font-size: 0.9rem;">${s.code}</span>
+                                <span style="padding: 2px 8px; background: rgba(0,212,255,0.15); border-radius: 4px; font-size: 0.8rem; color: #00d4ff;">评分 ${s.score || '-'}</span>
+                            </div>
+                            <div style="display: flex; gap: 16px; font-size: 0.85rem; color: #888;">
+                                <span>现价: <span style="color: #fff;">${price}</span></span>
+                                <span>回测收益: <span style="color:${bt.profit_pct >= 0 ? '#f56c6c' : '#67c23a'};">${bt.profit_pct >= 0 ? '+' : ''}${profitPct}%</span></span>
+                                <span>SQN: <span style="color: #e6a23c;">${sqn}</span></span>
+                                ${bt.total_trades ? '<span>交易次数: ' + bt.total_trades + '</span>' : ''}
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="stock-change ${changeClass}" style="font-size: 1.2rem; font-weight: bold;">
+                                ${change >= 0 ? '+' : ''}${Number(change).toFixed(2)}%
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            document.getElementById('stockContent').innerHTML = html;
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderStocks();
+        }
+
+        async function loadChart() {
+            // 优先使用下拉选择，其次使用直接输入
+            const selectCode = document.getElementById('chartCodeSelect').value;
+            const inputCode = document.getElementById('chartCodeInput').value.trim();
+            const code = selectCode || inputCode;
+            if (!code) {
+                document.getElementById('bokehChart').innerHTML = '<div style="text-align:center;padding:40px;color:#e6a23c;">请选择或输入股票代码</div>';
+                return;
+            }
+            document.getElementById('bokehChart').innerHTML = '<div class="loading">加载图表...</div>';
+            try {
+                const res = await fetch(API_BASE + '/indicators/' + code);
+                const data = await res.json();
+                if (data.code === 0 && data.data.div) {
+                    document.getElementById('bokehChart').innerHTML = data.data.div;
+                    if (data.data.script) {
+                        const script = document.createElement('script');
+                        script.textContent = data.data.script.replace(/<\/?script>/g, '');
+                        document.body.appendChild(script);
+                    }
+                } else {
+                    document.getElementById('bokehChart').innerHTML = '<div class="loading">暂无图表数据</div>';
+                }
+            } catch (e) {
+                document.getElementById('bokehChart').innerHTML = '<div class="loading">加载失败</div>';
+            }
+        }
+
+        function onChartCategoryChange() {
+            const category = document.getElementById('chartCategory').value;
+            const select = document.getElementById('chartCodeSelect');
+            select.innerHTML = '<option value="">-- 加载中 --</option>';
+
+            if (category === 'custom') {
+                // 自定义模式，清空下拉框
+                select.innerHTML = '<option value="">-- 直接输入股票代码 --</option>';
+                select.style.display = 'none';
+                document.getElementById('chartCodeInput').style.display = 'inline-block';
+                document.getElementById('chartCodeInput').placeholder = '输入股票代码，如: 600519';
+                return;
+            }
+
+            select.style.display = 'inline-block';
+            document.getElementById('chartCodeInput').style.display = 'inline-block';
+            document.getElementById('chartCodeInput').placeholder = '或直接输入股票代码';
+
+            // 映射分类
+            const categoryMap = {
+                'mid_long': 'mid_long',
+                'short_aggressive': 'short_term_aggressive',
+                'short_conservative': 'short_term_conservative',
+                'rsrs_kdj_cci': 'rsrs_kdj_cci'
+            };
+
+            const mappedCategory = categoryMap[category];
+            const stocks = stockData && stockData[mappedCategory] ? stockData[mappedCategory] : [];
+
+            if (stocks.length === 0) {
+                select.innerHTML = '<option value="">-- 暂无数据 --</option>';
+                return;
+            }
+
+            let html = '<option value="">-- 请选择股票 --</option>';
+            stocks.forEach(s => {
+                html += `<option value="${s.code}">${s.code} ${s.name}</option>`;
+            });
+            select.innerHTML = html;
+        }
+
+        function renderIndicatorsDetail() {
+            let html = '<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">';
+            for (const [key, ind] of Object.entries(indicatorsInfo)) {
+                html += `
+                    <div class="card" style="cursor:pointer" onclick="showIndicatorDetail('${key}')">
+                        <h3 style="color:#00d4ff; margin-bottom:8px;">${ind.name}</h3>
+                        <p style="color:#aaa; font-size:0.85rem; line-height:1.5;">${ind.desc.substring(0, 60)}...</p>
+                        <p style="color:#666; font-size:0.75rem; margin-top:8px;">点击查看详情 →</p>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            html += `
+                <div id="indicatorModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:1000; overflow:auto;">
+                    <div style="max-width:700px; margin:60px auto; background:#1a1a2e; border-radius:16px; padding:30px; border:1px solid rgba(0,212,255,0.3);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                            <h2 id="modalTitle" style="color:#00d4ff; margin:0;"></h2>
+                            <span onclick="closeIndicatorModal()" style="cursor:pointer; color:#888; font-size:24px;">&times;</span>
+                        </div>
+                        <div id="modalContent" style="color:#ccc; line-height:1.8;"></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('indicatorsDetailContent').innerHTML = html;
+        }
+
+        function showIndicatorDetail(key) {
+            const ind = indicatorsInfo[key];
+            if (!ind) return;
+            document.getElementById('modalTitle').textContent = ind.name;
+            document.getElementById('modalContent').innerHTML = `
+                <div style="margin-bottom:20px;">
+                    <h4 style="color:#fff; border-left:3px solid #00d4ff; padding-left:10px; margin-bottom:10px;">指标简介</h4>
+                    <p style="color:#ccc;">${ind.desc}</p>
+                </div>
+                <div style="margin-bottom:20px;">
+                    <h4 style="color:#fff; border-left:3px solid #7c3aed; padding-left:10px; margin-bottom:10px;">计算公式</h4>
+                    <p style="color:#00d4ff; font-family:monospace; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px;">${ind.calc}</p>
+                </div>
+                <div style="margin-bottom:20px;">
+                    <h4 style="color:#fff; border-left:3px solid #67c23a; padding-left:10px; margin-bottom:10px;">交易信号</h4>
+                    <p style="color:#ccc;">${ind.signal}</p>
+                </div>
+                <div>
+                    <h4 style="color:#fff; border-left:3px solid #f56c6c; padding-left:10px; margin-bottom:10px;">常用参数</h4>
+                    <p style="color:#ccc;">${ind.period}</p>
+                </div>
+            `;
+            document.getElementById('indicatorModal').style.display = 'block';
+        }
+
+        function closeIndicatorModal() {
+            document.getElementById('indicatorModal').style.display = 'none';
+        }
+
+        async function runBacktest() {
+            const strategy = document.getElementById('backtestStrategy').value;
+            const code = document.getElementById('backtestCode').value.trim();
+            document.getElementById('backtestResult').innerHTML = '<div class="loading">回测运行中，请稍候...</div>';
+            try {
+                // 获取股票列表用于回测
+                let codes = [];
+                if (code) {
+                    codes = [code];
+                } else {
+                    // 从选股结果获取股票代码
+                    const stocksRes = await fetch(API_BASE + '/stocks');
+                    const stocksData = await stocksRes.json();
+                    if (stocksData.code === 0 && stocksData.data) {
+                        const stockList = stocksData.data[strategy] || stocksData.data.mid_long || [];
+                        codes = stockList.map(s => s.code).slice(0, 10); // 最多10只
+                    }
+                }
+                if (!codes.length) {
+                    document.getElementById('backtestResult').innerHTML = '<div class="card" style="text-align:center; padding:40px; color:#f56c6c;">无可用于回测的股票代码</div>';
+                    return;
+                }
+                const res = await fetch(API_BASE + '/backtest', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ codes })
+                });
+                const data = await res.json();
+                if (data.code === 0 && data.data) {
+                    const bt = data.data;
+                    document.getElementById('backtestResult').innerHTML = `
+                        <div class="card">
+                            <h3 style="color:#00d4ff; margin-bottom:16px;">回测结果</h3>
+                            <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:16px;">
+                                <div><strong style="color:#888;">总收益率:</strong> <span style="color:${bt.profit_pct >= 0 ? '#f56c6c' : '#67c23a'}; font-size:1.2rem;">${(bt.profit_pct * 100).toFixed(2)}%</span></div>
+                                <div><strong style="color:#888;">SQN:</strong> <span style="color:#00d4ff;">${bt.sqn?.toFixed(2) || '-'}</span></div>
+                                <div><strong style="color:#888;">夏普比率:</strong> <span style="color:#fff;">${bt.sharpe_ratio?.toFixed(2) || '-'}</span></div>
+                                <div><strong style="color:#888;">最大回撤:</strong> <span style="color:#f56c6c;">${bt.max_drawdown ? (bt.max_drawdown * 100).toFixed(2) + '%' : '-'}</span></div>
+                                <div><strong style="color:#888;">交易次数:</strong> <span style="color:#fff;">${bt.total_trades || '-'}</span></div>
+                                <div><strong style="color:#888;">胜率:</strong> <span style="color:#fff;">${bt.win_rate ? (bt.win_rate * 100).toFixed(1) + '%' : '-'}</span></div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('backtestResult').innerHTML = '<div class="card" style="text-align:center; padding:40px; color:#f56c6c;">回测失败: ' + (data.message || '未知错误') + '</div>';
+                }
+            } catch (e) {
+                document.getElementById('backtestResult').innerHTML = '<div class="card" style="text-align:center; padding:40px; color:#f56c6c;">回测请求失败: ' + e.message + '</div>';
+            }
+        }
+
+        async function loadAnalysis() {
+            const code = document.getElementById('analysisCodeInput').value.trim();
+            if (!code) {
+                document.getElementById('analysisResult').innerHTML = '<div class="card" style="text-align:center; padding:40px; color:#f56c6c;">请输入股票代码</div>';
+                return;
+            }
+            document.getElementById('analysisResult').innerHTML = '<div class="loading">分析中，请稍候...</div>';
+            try {
+                // 使用专门的智能分析API
+                const res = await fetch(API_BASE + '/analyze/' + code);
+                const data = await res.json();
+                if (data.code === 0 && data.data) {
+                    const d = data.data;
+                    const buyColor = d.buy_score >= 40 ? '#67c23a' : (d.buy_score >= 20 ? '#e6a23c' : '#909399');
+                    const sellColor = d.sell_score >= 40 ? '#f56c6c' : (d.sell_score >= 20 ? '#e6a23c' : '#909399');
+                    const recColor = d.recommendation.includes('买入') ? '#67c23a' : (d.recommendation.includes('风险') || d.recommendation.includes('卖出') ? '#f56c6c' : '#e6a23c');
+
+                    let signalsHtml = '';
+                    if (d.buy_signals && d.buy_signals.length) {
+                        signalsHtml += '<div style="margin-top:16px;"><h4 style="color:#67c23a; margin-bottom:8px;">买入信号</h4>';
+                        d.buy_signals.forEach(s => {
+                            signalsHtml += `<div style="display:flex; gap:8px; margin-bottom:6px; padding:8px; background:rgba(103,194,58,0.1); border-radius:6px;">
+                                <span style="color:#67c23a; font-weight:bold;">${s.indicator}</span>
+                                <span style="color:#ccc;">${s.signal} - ${s.value}</span>
+                                <span style="color:#909399;">→ ${s.action}</span>
+                            </div>`;
+                        });
+                        signalsHtml += '</div>';
+                    }
+                    if (d.sell_signals && d.sell_signals.length) {
+                        signalsHtml += '<div style="margin-top:16px;"><h4 style="color:#f56c6c; margin-bottom:8px;">卖出信号</h4>';
+                        d.sell_signals.forEach(s => {
+                            signalsHtml += `<div style="display:flex; gap:8px; margin-bottom:6px; padding:8px; background:rgba(245,108,108,0.1); border-radius:6px;">
+                                <span style="color:#f56c6c; font-weight:bold;">${s.indicator}</span>
+                                <span style="color:#ccc;">${s.signal} - ${s.value}</span>
+                                <span style="color:#909399;">→ ${s.action}</span>
+                            </div>`;
+                        });
+                        signalsHtml += '</div>';
+                    }
+
+                    // 指标判定标准
+                    const kdj = d.indicators?.kdj || {};
+                    const rsi = d.indicators?.rsi?.value || 0;
+                    const cci = d.indicators?.cci?.value || 0;
+                    const rsrs = d.indicators?.rsrs || {};
+                    const kdjStatus = kdj.k < 20 ? '超卖(买入时机)' : (kdj.k > 80 ? '超买(注意风险)' : '正常');
+                    const rsiStatus = rsi < 30 ? '超卖(买入时机)' : (rsi > 70 ? '超买(注意风险)' : '正常');
+                    const cciStatus = cci < -100 ? '超卖(买入时机)' : (cci > 100 ? '超买(注意风险)' : '正常');
+                    const rsrsSignal = rsrs.signal || 'neutral';
+                    const rsrsStatus = rsrsSignal === 'strong_up' ? '强势向上(买入)' : (rsrsSignal === 'up' ? '向上(关注)' : (rsrsSignal === 'strong_down' ? '强势向下(卖出)' : (rsrsSignal === 'down' ? '向下(注意)' : '中性')));
+
+                    document.getElementById('analysisResult').innerHTML = `
+                        <div class="card">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                                <h3 style="color:#00d4ff; margin:0;">${d.name || code} (${d.code})</h3>
+                                <div style="text-align:right;">
+                                    <div style="font-size:1.5rem; color:#fff; font-weight:bold;">${d.price?.toFixed(2) || '-'}</div>
+                                    <div style="color:${d.change_pct >= 0 ? '#f56c6c' : '#67c23a'};">${d.change_pct >= 0 ? '+' : ''}${d.change_pct?.toFixed(2) || '0.00'}%</div>
+                                </div>
+                            </div>
+                            <div style="background:rgba(0,0,0,0.3); padding:16px; border-radius:8px; margin-bottom:16px;">
+                                <div style="display:inline-block; padding:8px 20px; border-radius:8px; background:${recColor}; color:white; font-weight:bold; font-size:1.1rem;">${d.recommendation}</div>
+                                <p style="color:#ccc; margin-top:12px; line-height:1.6;">${d.recommendation_desc || ''}</p>
+                            </div>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:16px;">
+                                <div style="text-align:center; padding:16px; background:rgba(103,194,58,0.1); border-radius:8px;">
+                                    <div style="color:#67c23a; font-size:0.9rem;">买入评分</div>
+                                    <div style="color:${buyColor}; font-size:2rem; font-weight:bold;">${d.buy_score || 0}</div>
+                                </div>
+                                <div style="text-align:center; padding:16px; background:rgba(245,108,108,0.1); border-radius:8px;">
+                                    <div style="color:#f56c6c; font-size:0.9rem;">卖出评分</div>
+                                    <div style="color:${sellColor}; font-size:2rem; font-weight:bold;">${d.sell_score || 0}</div>
+                                </div>
+                            </div>
+                            ${signalsHtml}
+                            <div style="margin-top:16px; padding:16px; background:rgba(0,0,0,0.2); border-radius:8px;">
+                                <h4 style="color:#fff; margin:0 0 12px 0;">📊 指标判定标准</h4>
+                                <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:12px;">
+                                    <div style="padding:10px; background:rgba(0,212,255,0.1); border-radius:6px;">
+                                        <div style="color:#00d4ff; font-weight:bold; margin-bottom:6px;">RSRS指标</div>
+                                        <div style="font-size:0.85rem; color:#ccc;">斜率=${rsrs.slope?.toFixed(4) || '-'}</div>
+                                        <div style="font-size:0.8rem; margin-top:4px; color:${rsrsSignal === 'strong_up' ? '#67c23a' : (rsrsSignal === 'up' ? '#90ee90' : (rsrsSignal === 'strong_down' ? '#f56c6c' : '#909399'))};">${rsrsStatus}</div>
+                                        <div style="font-size:0.75rem; color:#666; margin-top:4px;">斜率>阈值强势向上→买入 | 斜率<负阈值强势向下→卖出</div>
+                                    </div>
+                                    <div style="padding:10px; background:rgba(124,58,237,0.1); border-radius:6px;">
+                                        <div style="color:#7c3aed; font-weight:bold; margin-bottom:6px;">KDJ指标</div>
+                                        <div style="font-size:0.85rem; color:#ccc;">K=${kdj.k?.toFixed(2)} D=${kdj.d?.toFixed(2)} J=${kdj.j?.toFixed(2)}</div>
+                                        <div style="font-size:0.8rem; margin-top:4px; color:${kdj.k < 20 ? '#f56c6c' : (kdj.k > 80 ? '#67c23a' : '#909399')};">${kdjStatus}</div>
+                                        <div style="font-size:0.75rem; color:#666; margin-top:4px;">K<20超卖→买入 | K>80超买→卖出 | 金叉买入 | 死叉卖出</div>
+                                    </div>
+                                    <div style="padding:10px; background:rgba(230,162,60,0.1); border-radius:6px;">
+                                        <div style="color:#e6a23c; font-weight:bold; margin-bottom:6px;">RSI指标</div>
+                                        <div style="font-size:0.85rem; color:#ccc;">RSI=${rsi.toFixed(2)}</div>
+                                        <div style="font-size:0.8rem; margin-top:4px; color:${rsi < 30 ? '#f56c6c' : (rsi > 70 ? '#67c23a' : '#909399')};">${rsiStatus}</div>
+                                        <div style="font-size:0.75rem; color:#666; margin-top:4px;">RSI<30超卖→买入 | RSI>70超买→卖出</div>
+                                    </div>
+                                    <div style="padding:10px; background:rgba(245,108,108,0.1); border-radius:6px;">
+                                        <div style="color:#f56c6c; font-weight:bold; margin-bottom:6px;">CCI指标</div>
+                                        <div style="font-size:0.85rem; color:#ccc;">CCI=${cci.toFixed(2)}</div>
+                                        <div style="font-size:0.8rem; margin-top:4px; color:${cci < -100 ? '#f56c6c' : (cci > 100 ? '#67c23a' : '#909399')};">${cciStatus}</div>
+                                        <div style="font-size:0.75rem; color:#666; margin-top:4px;">CCI<-100超卖→买入 | CCI>+100超买→卖出</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="margin-top:16px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.1);">
+                                <h4 style="color:#888; margin-bottom:12px;">核心指标数值</h4>
+                                <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:8px; font-size:0.9rem;">
+                                    <div><span style="color:#888;">KDJ:</span> K=${d.indicators?.kdj?.k?.toFixed(2)} D=${d.indicators?.kdj?.d?.toFixed(2)} J=${d.indicators?.kdj?.j?.toFixed(2)}</div>
+                                    <div><span style="color:#888;">RSI:</span> ${d.indicators?.rsi?.value?.toFixed(2) || '-'}</div>
+                                    <div><span style="color:#888;">CCI:</span> ${d.indicators?.cci?.value?.toFixed(2) || '-'}</div>
+                                    <div><span style="color:#888;">RSRS:</span> ${d.indicators?.rsrs?.value?.toFixed(4) || '-'} (斜率: ${d.indicators?.rsrs?.slope?.toFixed(4) || '-'})</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('analysisResult').innerHTML = '<div class="card" style="text-align:center; padding:40px; color:#f56c6c;">获取数据失败: ' + (data.message || '未知错误') + '</div>';
+                }
+            } catch (e) {
+                document.getElementById('analysisResult').innerHTML = '<div class="card" style="text-align:center; padding:40px; color:#f56c6c;">分析请求失败: ' + e.message + '</div>';
+            }
+        }
+    </script>
+</body>
+</html>

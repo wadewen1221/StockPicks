@@ -1,0 +1,2 @@
+# 此目录由 `npm run build --prefix frontend` 后 `xcopy frontend\dist\* backend\static\` 填充
+# 不进 git 控制,部署时构建生成
