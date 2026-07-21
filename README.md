@@ -8,6 +8,7 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![GitHub stars](https://img.shields.io/github/stars/wadewen1221/StockPicks?style=social)](https://github.com/wadewen1221/StockPicks/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/wadewen1221/StockPicks?style=social)](https://github.com/wadewen1221/StockPicks/network)
+[![Discuss on Hi](https://img.shields.io/badge/Discuss-Hi-blue.svg)](https://hi.hirey.ai/listing/listing_d03ad5792df6)
 
 [English](#english) | [中文](#中文)
 
@@ -169,6 +170,14 @@ This project is for **learning and research only**:
 ## 📜 License
 
 [MIT License](LICENSE)
+
+## 💬 Community
+
+- 📢 **[在 Hi 平台讨论 / 找贡献伙伴](https://hi.hirey.ai/listing/listing_d03ad5792df6)** — 站内联系最稳
+- 📚 [GitHub Discussions](../../discussions) — issue + 想法
+- 🐛 [Issue Tracker](../../issues) — bug + feature
+
+---
 
 ## 🙏 Acknowledgments
 
