@@ -116,8 +116,16 @@ STOCK_PICKS_DATA=/your/custom/path
 | 数据更新 | 交易日 17:30 | 拉取当日行情 |
 | 选股计算 | 交易日 18:30 | 运行三步法选股 + 回测 |
 | 新闻更新 | 每日 07:00 | 抓取早间资讯 |
+| **财务补全** | **每年 5/9/11 月 10 号 02:00** | **补全季度财报数据（baostock → akshare 兜底）** |
 
-> 注：财务更新（季度财报拉取）和周日周报任务已取消，不再调度。
+> 注：财务补全任务：
+> - 5 月：补一季报 + 上年度年报
+> - 9 月：补半年报
+> - 11 月：补三季报
+> - 数据源：baostock（主，稳定免费）→ akshare（兜底，覆盖更全）
+> - 范围：所有 A 股（5000+）
+> - 模块：`backend/jobs/fiscal_job.py`
+>
 > 所有任务时区为 `Asia/Shanghai`，使用 `apscheduler` `BackgroundScheduler`。
 
 关闭定时任务: 设置环境变量 `ENABLE_SCHEDULER=false`

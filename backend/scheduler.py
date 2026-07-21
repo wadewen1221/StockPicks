@@ -179,6 +179,20 @@ def _run_news_update():
         logger.error(f"[资讯更新] 失败: {e}")
 
 
+def _run_fiscal_update():
+    """季度财务数据补全任务（5/9/11 月 10 号 02:00 触发）
+
+    数据源：baostock（主）→ akshare（兜底）
+    """
+    logger.info("[财务更新] 开始季度财务数据补全")
+    try:
+        from jobs.fiscal_job import run_fiscal_update as _run
+        stats = _run()
+        logger.info(f"[财务更新] 完成: {stats}")
+    except Exception as e:
+        logger.error(f"[财务更新] 失败: {e}", exc_info=True)
+
+
 def _check_and_trigger_immediate_run(scheduler):
     """如果现在是交易日且在17:30-19:00延迟期内，触发数据更新任务"""
     now = datetime.now()
@@ -240,6 +254,21 @@ def start_scheduler():
         max_instances=1
     )
     logger.info("调度任务已注册: 每天07:00 (早间资讯更新)")
+
+    # 任务4: 每年 5/9/11 月 10 号 02:00 - 季度财务数据补全
+    #   5月：补一季报 + 上年度年报
+    #   9月：补半年报
+    #   11月：补三季报
+    scheduler.add_job(
+        _run_fiscal_update,
+        CronTrigger(month='5,9,11', day=10, hour=2, minute=0, timezone='Asia/Shanghai'),
+        id='fiscal_update',
+        name='季度财务数据补全',
+        coalesce=True,
+        max_instances=1,
+        misfire_grace_time=3600  # 允许最多延迟1小时，避免深夜任务被跳过
+    )
+    logger.info("调度任务已注册: 每年5/9/11月10号 02:00 (季度财务数据补全)")
 
     # 注意: 每周日20:00周报任务已取消
 
