@@ -5,24 +5,29 @@ on:
     branches: [master, main]
   workflow_dispatch:
 
+# 显式声明 Pages 权限 (GitHub Pages 部署所需)
 permissions:
   contents: read
   pages: write
   id-token: write
 
+# 同一 Pages 部署串行,不互相打断
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
   build:
+    name: Build MkDocs site
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: 'pip'
@@ -44,12 +49,14 @@ jobs:
           path: site
 
   deploy:
+    name: Deploy to GitHub Pages
     needs: build
     runs-on: ubuntu-latest
+    # Pages 部署必须绑到 github-pages 环境,这是 GitHub 官方要求
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
