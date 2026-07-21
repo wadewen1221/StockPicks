@@ -1,5 +1,5 @@
 import yaml
-for f in ['.github/workflows/ci.yml', '.github/workflows/pages.yml']:
+for f in ['.github/workflows/main-ci.yml', '.github/workflows/pages.yml']:
     with open(f, 'rb') as fp:
         data = fp.read()
     print(f'=== {f} ===')
