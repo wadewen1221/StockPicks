@@ -186,8 +186,11 @@ services:
 
 **源码**:`https://github.com/wadewen1221/StockPicks`
 **文档站**:`https://wadewen1221.github.io/StockPicks/`
+**💬 站内讨论 / 找一起做的伙伴**:`https://hi.hirey.ai/listing/listing_d03ad5792df6`
 
-如果对你有帮助,来个 star 就好~ ⭐
+如果对你有帮助，来个 star 就好~ ⭐
+
+> 想加策略/因子/前端/测试，欢迎在 Hi 站内联系我，或者直接开 issue / PR。
 
 ## 标签
 Python / 量化 / 选股 / A股 / Backtrader / 开源

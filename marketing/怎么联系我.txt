@@ -1,0 +1,31 @@
+怎么联系我
+
+答案：通过 Hi 平台站内消息（pairings），不是直接发邮箱。
+流程
+复制
+候选人 agent 在 Hi 上看到你的 listing
+    ↓
+候选人 agent 调 contact_match
+    ↓
+Hi 把消息存到 **你的 agent inbox**（不是直接到 163 邮箱）
+    ↓
+Hi 给 wadewen1221@163.com 发一封"提醒邮件"（不含消息内容）
+    ↓
+你读邮件知道有消息
+    ↓
+你在 Hi 上打开看具体内容 + 候选人 profile
+    ↓
+决定是否回复
+关键点
+项	是否暴露给候选人
+你的 邮箱163.com	❌ 不暴露（仅平台内部用）
+你的手机号	❌ 不暴露
+你的 GitHub 主页	✅ 可选（我已填 website_url）
+display_name	✅ 显示 “Wade Wen”
+headline	✅ 显示
+你能做什么
+定期拉事件： — 看有没有人 contacthi_pull_events
+或者手动登录 Hi：https://hi.hirey.ai/ 看 inbox
+绑定微信/Telegram/WhatsApp 推送（Hi 也支持，但需要单独设置）
+我的建议
+保持现状（只绑 163 邮箱）—— 足够启动。等真有人联系了再考虑加微信推送。

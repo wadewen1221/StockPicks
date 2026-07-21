@@ -1,0 +1,25 @@
+StockPicks宣传引流方案：
+
+
+
+marketing/
+├── QUICK_COPY_PASTE.md    # 一键发布说明
+├── 01_v2ex_share.md       # V2EX 完整帖
+├── 02_juejin_article.md   # 掘金长文(完整大纲+正文)
+├── 03_zhihu_answer.md     # 知乎回答
+├── 04_okjike_post.md      # 即刻动态
+└── 05_hirey_listing.md    # Hi listing 配置
+README.md                  # 双语版(英+中) + 6 个 badges
+🚀 你接下来 30 分钟能做完的事
+顺序（按引流效率）：
+
+README push（已完成 ✅ ）b2fa6ba
+V2EX 发帖：打开 01_v2ex_share.md → 复制 → https://v2ex.com/newpost?node=create
+掘金发文：打开 02_juejin_article.md → 复制 → juejin.cn 发布
+知乎发回答：找“如何用 Python 量化选股”问题 → 粘贴 03_zhihu_answer.md
+即刻动态：复制 04_okjike_post.md 短版
+
+
+
+链接一：
+https://hi.hirey.ai/listing/listing_d03ad5792df6

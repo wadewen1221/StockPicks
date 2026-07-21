@@ -8,6 +8,8 @@
 
 GitHub:https://github.com/wadewen1221/StockPicks
 
+站内讨论/合作：https://hi.hirey.ai/listing/listing_d03ad5792df6
+
 欢迎 A 股老韭菜们 star / fork / 提需求 ⭐
 
 #开源 #A股 #量化投资 #Python #选股工具

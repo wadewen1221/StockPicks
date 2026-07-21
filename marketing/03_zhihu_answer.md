@@ -127,6 +127,7 @@ python backend/start_v2.py  # http://localhost:5001
 
 - **GitHub**:https://github.com/wadewen1221/StockPicks
 - **文档站**:https://wadewen1221.github.io/StockPicks/
+- **💬 站内讨论 / 找一起做的伙伴**:**[Hi 平台](https://hi.hirey.ai/listing/listing_d03ad5792df6)** —— 不会被邮件过滤，建议首选
 
 如果你也是 A 股老韭菜 + 程序员,欢迎 star / fork / 提 issue 一起搞。
 
