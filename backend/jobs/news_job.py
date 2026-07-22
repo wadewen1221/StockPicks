@@ -11,6 +11,7 @@ import sys
 import logging
 import json
 import re
+from pathlib import Path
 from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
@@ -121,7 +122,15 @@ def run_news_update():
 
         # 保存资讯数据
         data_dir = get_data_dir()
-        os.makedirs(data_dir, exist_ok=True)
+        # data_dir 在 Windows 下可能是指向老项目的 NTFS junction，
+        # 此时 os.path.exists() 返回 False，但 os.makedirs(exist_ok=True) 仍会触发
+        # WinError 183。先检查 junction/exists，避免盲目创建。
+        data_dir_path = Path(data_dir)
+        if not data_dir_path.exists() and not data_dir_path.is_junction():
+            try:
+                data_dir_path.mkdir(parents=True, exist_ok=True)
+            except FileExistsError:
+                pass  # 并发创建或刚好变成 junction 时忽略
         news_file = os.path.join(data_dir, 'news_cache.json')
         with open(news_file, 'w', encoding='utf-8') as f:
             json.dump(news_data, f, ensure_ascii=False, indent=2)
