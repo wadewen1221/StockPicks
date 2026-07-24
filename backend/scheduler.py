@@ -251,7 +251,8 @@ def start_scheduler():
         id='news_update',
         name='早间资讯更新',
         coalesce=True,
-        max_instances=1
+        max_instances=1,
+        misfire_grace_time=300  # 允许最多延迟5分钟执行，避免因秒级时间漂移/系统负载导致任务被跳过
     )
     logger.info("调度任务已注册: 每天07:00 (早间资讯更新)")
 
